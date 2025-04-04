@@ -266,6 +266,7 @@ def ConexFibra():
 				deactivate_connection(Celular)
 			
 	else:
+		hora, minutos, segundos, dia, mes, ano = HoraFecha()
 		print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {WIFI_INTERFACE} con mombre asignado {nombre_conexion(WIFI_INTERFACE)} no está habilitada") 
 		#Envio Estado de conexion a la base de datos
 		Consulta ="UPDATE Configserver SET ST_Conex_Fibra = %s WHERE NombreServer = %s" 
