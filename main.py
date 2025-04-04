@@ -310,6 +310,7 @@ def ConexCelular():
 		Parametros = ("Conectado", "DomoServer")
 		SQLCMD_To_MariaDB(Consulta, Parametros)   
 	else:
+		hora, minutos, segundos, dia, mes, ano = HoraFecha()
 		print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {USB_INTERFACE} con mombre asignado {nombre_conexion(USB_INTERFACE)} no está habilitada")   
 		#Envio Estado de conexion a la base de datos
 		Consulta ="UPDATE Configserver SET ST_Conex_Celular = %s WHERE NombreServer = %s" 
