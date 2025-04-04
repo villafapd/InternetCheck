@@ -273,10 +273,10 @@ def ConexFibra():
 		Parametros = ("Desconectado", "DomoServer")
 		SQLCMD_To_MariaDB(Consulta, Parametros)	 
 		#Envio de mensaje de aviso de corte de conexion
-		enviarMensaje_a_mi("Conexión a internet desde Fibra óptica DESCONECTADA")
+		#enviarMensaje_a_mi("Conexión a internet desde Fibra óptica DESCONECTADA")
 		if activate_connection(Celular):
 			deactivate_connection(Fibra)
-			enviarMensaje_a_mi("Conexión a internet conmutada a Celular y CONECTADA")
+			#enviarMensaje_a_mi("Conexión a internet conmutada a Celular y CONECTADA")
 			#Envio TRUE a la variable Aux_Conex_Celular a la base de datos
 			Aux_Conex_Celular = "True"
 			Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
@@ -284,13 +284,13 @@ def ConexFibra():
 			SQLCMD_To_MariaDB(Consulta, Parametros)				
 			
 		else:
-			enviarMensaje_a_mi("Fallo en la conmutación de la conexión a internet a través de Celular. \n Próximo intento de conmutación a celular en 3 segundos. ")
+			#enviarMensaje_a_mi("Fallo en la conmutación de la conexión a internet a través de Celular. \n Próximo intento de conmutación a celular en 3 segundos. ")
 			print("Espera de 3 seg. para nuevo reintentoo")
 			time.sleep(3)
 			if activate_connection(Celular):
-				enviarMensaje_a_mi("Luego del reintento en la conmutación de la conexión a internet a través de Celular, se ha conectado exitosamente.")
+				#enviarMensaje_a_mi("Luego del reintento en la conmutación de la conexión a internet a través de Celular, se ha conectado exitosamente.")
 				deactivate_connection(Fibra)
-				enviarMensaje_a_mi("Conexión a internet conmutada a Celular y CONECTADA")
+				#enviarMensaje_a_mi("Conexión a internet conmutada a Celular y CONECTADA")
 				#Envio TRUE a la variable Aux_Conex_Celular a la base de datos
 				Aux_Conex_Celular = "True"
 				Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
