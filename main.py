@@ -115,27 +115,27 @@ def HoraFecha():
 
 #Activar conexion a internet
 def activate_connection(connection_name):
-    command = f"nmcli connection up {connection_name}"
-    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+	command = f"nmcli connection up {connection_name}"
+	result = subprocess.run(command, shell=True, capture_output=True, text=True)
 
-    if result.returncode == 0:
-        print(f"La conexión '{connection_name}' se activó correctamente.")
-        return True
-    else:
-        print(f"Error al activar la conexión '{connection_name}':\n{result.stderr}")
-        return False
+	if result.returncode == 0:
+		print(f"La conexión '{connection_name}' se activó correctamente.")
+		return True
+	else:
+		print(f"Error al activar la conexión '{connection_name}':\n{result.stderr}")
+		return False
 
 #desactivar conexion a internet
 def deactivate_connection(connection_name):
-    command = f"nmcli connection down {connection_name}"
-    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+	command = f"nmcli connection down {connection_name}"
+	result = subprocess.run(command, shell=True, capture_output=True, text=True)
 
-    if result.returncode == 0:
-        print(f"La conexión '{connection_name}' se desactivó correctamente.")
-        return True
-    else:
-        print(f"Error al desactivar la conexión '{connection_name}':\n{result.stderr}")
-        return False     
+	if result.returncode == 0:
+		print(f"La conexión '{connection_name}' se desactivó correctamente.")
+		return True
+	else:
+		print(f"Error al desactivar la conexión '{connection_name}':\n{result.stderr}")
+		return False     
 
 #Modificacion Valor de la metrica en la tabla route y no es temporal
 def set_route_metric(connection_name, metric_value):
@@ -204,27 +204,42 @@ def check_connectivity(interface): #, con_prio, val_metric
 
 #Modificacion Valor de la metrica en la tabla route y es temporal. Se borra al reiniciar la pc
 def set_route(interface, gateway, metric):
-    """Configura la ruta predeterminada para una interfaz."""
-    try:
-        # Agrega la ruta predeterminada
-        subprocess.check_output(
-            f"ip route add default via {gateway} dev {interface} metric {metric}",
-            shell=True,
-            stderr=subprocess.DEVNULL,
-        )
-    except subprocess.CalledProcessError:
-        pass  # Maneja el error si el comando falla
+	"""Configura la ruta predeterminada para una interfaz."""
+	try:
+		# Agrega la ruta predeterminada
+		subprocess.check_output(
+			f"ip route add default via {gateway} dev {interface} metric {metric}",
+			shell=True,
+			stderr=subprocess.DEVNULL,
+		)
+	except subprocess.CalledProcessError:
+		pass  # Maneja el error si el comando falla
 
-    try:
-        # Elimina rutas predeterminadas conflictivas
-        subprocess.check_output(
-            f"ip route del default dev {interface}",
-            shell=True,
-            stderr=subprocess.DEVNULL,
-        )
-    except subprocess.CalledProcessError:
-        pass  # Maneja el error si el comando falla
+	try:
+		# Elimina rutas predeterminadas conflictivas
+		subprocess.check_output(
+			f"ip route del default dev {interface}",
+			shell=True,
+			stderr=subprocess.DEVNULL,
+		)
+	except subprocess.CalledProcessError:
+		pass  # Maneja el error si el comando falla
 
+def ConexCelular():
+	if check_interface_status(USB_INTERFACE) and check_connectivity(USB_INTERFACE) == "Conectado" and ip_interface(USB_INTERFACE) != "0.0.0.0":
+		hora, minutos, segundos, dia, mes, ano = HoraFecha()
+		print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {USB_INTERFACE} con mombre asignado {nombre_conexion(USB_INTERFACE)} está habilitada y está {check_connectivity(USB_INTERFACE)} a internet y con dirección ip: {ip_interface(USB_INTERFACE)}")  
+		#Envio Estado de conexion a la base de datos
+		Consulta ="UPDATE Configserver SET ST_Conex_Celular = %s WHERE NombreServer = %s" 
+		Parametros = ("Conectado", "DomoServer")
+		SQLCMD_To_MariaDB(Consulta, Parametros)   
+	else:
+		hora, minutos, segundos, dia, mes, ano = HoraFecha()
+		print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {USB_INTERFACE} con mombre asignado {nombre_conexion(USB_INTERFACE)} no está habilitada")   
+		#Envio Estado de conexion a la base de datos
+		Consulta ="UPDATE Configserver SET ST_Conex_Celular = %s WHERE NombreServer = %s" 
+		Parametros = ("Desconectado", "DomoServer")
+		SQLCMD_To_MariaDB(Consulta, Parametros) 
 
 def ConexFibra():
 	
@@ -264,6 +279,10 @@ def ConexFibra():
 		if Aux_Conex_Celular == "True":
 			if activate_connection(Fibra):
 				deactivate_connection(Celular)
+				Aux_Conex_Celular = "False"
+				Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
+				Parametros = (Aux_Conex_Celular, "DomoServer")
+				SQLCMD_To_MariaDB(Consulta, Parametros)	
 			
 	else:
 		hora, minutos, segundos, dia, mes, ano = HoraFecha()
@@ -272,9 +291,35 @@ def ConexFibra():
 		Consulta ="UPDATE Configserver SET ST_Conex_Fibra = %s WHERE NombreServer = %s" 
 		Parametros = ("Desconectado", "DomoServer")
 		SQLCMD_To_MariaDB(Consulta, Parametros)	 
+		with open("/home/villafapd/Documents/ConfigEspeciales/BotTelegram.txt", "r") as archivo:
+			# Leer las líneas del archivo
+			lineas = archivo.readlines()
+		# Inicializar las variables
+		USER = ""
+		PASSWORD = ""
+		# Procesar las lineas del archivo
+		for linea in lineas:
+			if linea.startswith("USER"):
+				USER = linea.split("=")[1].strip().strip("'")
+			elif linea.startswith("PASSWORD"):
+				PASSWORD = linea.split("=")[1].strip().strip("'")
+  
+		#Consulto a la DB el estado de la variable Aux_Conex_Celular
+		query = "SELECT Aux_Conex_Celular FROM {} WHERE {} = {}".format('Configserver', 'ID_Servidor', str(1))
+		with mariadb.connect(user=USER, password=PASSWORD, database="homeserver") as conn:
+			with conn.cursor() as cur:
+				cur.execute(query)
+				while True:
+					row = cur.fetchone()
+					if row is None:
+						break
+					Aux_Conex_Celular = row[0]
+			conn.commit()
+		del conn, cur
+  
 		#Envio de mensaje de aviso de corte de conexion
 		#enviarMensaje_a_mi("Conexión a internet desde Fibra óptica DESCONECTADA")
-		if activate_connection(Celular):
+		if Aux_Conex_Celular == "False" and activate_connection(Celular)== True:
 			deactivate_connection(Fibra)
 			#enviarMensaje_a_mi("Conexión a internet conmutada a Celular y CONECTADA")
 			#Envio TRUE a la variable Aux_Conex_Celular a la base de datos
@@ -283,7 +328,7 @@ def ConexFibra():
 			Parametros = (Aux_Conex_Celular, "DomoServer")
 			SQLCMD_To_MariaDB(Consulta, Parametros)				
 			
-		else:
+		elif Aux_Conex_Celular == "False" and activate_connection(Celular)== False:
 			#enviarMensaje_a_mi("Fallo en la conmutación de la conexión a internet a través de Celular. \n Próximo intento de conmutación a celular en 3 segundos. ")
 			print("Espera de 3 seg. para nuevo reintentoo")
 			time.sleep(3)
@@ -296,32 +341,18 @@ def ConexFibra():
 				Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
 				Parametros = (Aux_Conex_Celular, "DomoServer")
 				SQLCMD_To_MariaDB(Consulta, Parametros)				
-    
+	
 			else:
 				print("Fallo de reintento en la conmutación a la red celular. Espera de 30 seg. para reinicio de secuencia de conexión")
    
 			
 		  
-def ConexCelular():
-	if check_interface_status(USB_INTERFACE) and check_connectivity(USB_INTERFACE) == "Conectado" and ip_interface(USB_INTERFACE) != "0.0.0.0":
-		hora, minutos, segundos, dia, mes, ano = HoraFecha()
-		print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {USB_INTERFACE} con mombre asignado {nombre_conexion(USB_INTERFACE)} está habilitada y está {check_connectivity(USB_INTERFACE)} a internet y con dirección ip: {ip_interface(USB_INTERFACE)}")  
-		#Envio Estado de conexion a la base de datos
-		Consulta ="UPDATE Configserver SET ST_Conex_Celular = %s WHERE NombreServer = %s" 
-		Parametros = ("Conectado", "DomoServer")
-		SQLCMD_To_MariaDB(Consulta, Parametros)   
-	else:
-		hora, minutos, segundos, dia, mes, ano = HoraFecha()
-		print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {USB_INTERFACE} con mombre asignado {nombre_conexion(USB_INTERFACE)} no está habilitada")   
-		#Envio Estado de conexion a la base de datos
-		Consulta ="UPDATE Configserver SET ST_Conex_Celular = %s WHERE NombreServer = %s" 
-		Parametros = ("Desconectado", "DomoServer")
-		SQLCMD_To_MariaDB(Consulta, Parametros)         
+		
 			
 def cerrar_programa(signal, frame):
 	print("\nPrograma interrumpido por el usuario. Cerrando...")
 	Ctrl_conex_fibra.cancel()
-	Ctrl_conex_celular.cancel()
+	#Ctrl_conex_celular.cancel()
 	print("Cerrando Hilos y Chauuuu")   
 	exit(0)
 
@@ -333,9 +364,9 @@ if __name__ == "__main__":
 	ConexFibra()      
 	Ctrl_conex_fibra = Temporizador_offDelay(30,ConexFibra)
 	Ctrl_conex_fibra.start()#/.cancel    
-	ConexCelular() 	
-	Ctrl_conex_celular = Temporizador_offDelay(60,ConexCelular)
-	Ctrl_conex_celular.start()#/.cancel  
+	#ConexCelular() 	
+	#Ctrl_conex_celular = Temporizador_offDelay(60,ConexCelular)
+	#Ctrl_conex_celular.start()#/.cancel  
 
 
 	while True:
