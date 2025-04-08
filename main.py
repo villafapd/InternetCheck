@@ -399,8 +399,10 @@ def ConexFibra():
 			print("Espera de 3 seg. para nuevo reintentoo")
 			time.sleep(3)
 			if activate_connection(Celular):
+				Ruta_Predeterminada = get_default_route_ip(USB_INTERFACE)
+				del_route(WIFI_INTERFACE) #Borra la ruta por defecto de la wifi
+				add_route(USB_INTERFACE,Ruta_Predeterminada) #Se agrega ruta celular por defecto        
 				#enviarMensaje_a_mi("Luego del reintento en la conmutación de la conexión a internet a través de Celular, se ha conectado exitosamente.")
-				deactivate_connection(Fibra)
 				#enviarMensaje_a_mi("Conexión a internet conmutada a Celular y CONECTADA")
 				#Envio TRUE a la variable Aux_Conex_Celular a la base de datos
 				Aux_Conex_Celular = "True"
