@@ -27,6 +27,37 @@ Celular = "ConexCelularDash"
 
 
 
+def get_default_route_ip(interface):
+    try:
+        result = subprocess.run(
+            ['nmcli', '-t', '-f', 'IP4.GATEWAY', 'device', 'show', interface],
+            stdout=subprocess.PIPE,
+            text=True
+        )
+        ip_address = result.stdout.strip().split(':')[-1]  # Extrae solo la IP
+        return ip_address if ip_address else None
+    except Exception as e:
+        return None
+
+
+
+
+	
+
+
+
+#Reestablecer el valor de ipv4.route-metric ""
+def reset_route_metric(connection_name):
+	command = f"nmcli connection modify {connection_name} ipv4.route-metric \"\""
+	subprocess.run(command, shell=True)
+	print(f"El valor de 'ipv4.route-metric' para '{connection_name}' se ha restablecido.")
+
+#Borrar la conexión de red e internet completa y no la solo la conexion de internet
+def delete_connection(connection_name):
+	command = f"nmcli connection delete {connection_name}"
+	subprocess.run(command, shell=True)
+	print(f"La conexión '{connection_name}' ha sido eliminada.")
+
 def enviarMensaje(mensaje):
 	# Abrir el archivo de texto en modo lectura
 	with open("/home/villafapd/Documents/ConfigEspeciales/BotTelegram.txt", "r") as archivo:
@@ -72,7 +103,8 @@ def enviarMensaje_a_mi(mensaje):
 	url = f'https://api.telegram.org/bot{idBot}/sendMessage'
 	requests.post(url, data={'chat_id': idmio, 'text': mensaje, 'parse_mode': 'HTML'})
 	print("Mensaje de Respuesta Telegram vía url api")
- 
+
+#Consulta a DB
 def SQLCMD_To_MariaDB(Consulta, Parametros):
 	# Abrir el archivo de texto en modo lectura
 	with open("/home/villafapd/Documents/ConfigEspeciales/BotTelegram.txt", "r") as archivo:
@@ -95,7 +127,8 @@ def SQLCMD_To_MariaDB(Consulta, Parametros):
 	#Cerrar la conexión
 	cur.close()
 	conn.close()
-
+ 
+#Hora y Fecha del sistema
 def HoraFecha():
 	ahora = datetime.now()#.time()
 	date = datetime.now().today()
@@ -113,7 +146,7 @@ def HoraFecha():
 	ano = str(date.year)
 	return hora, minutos, segundos, dia, mes, ano
 
-#Activar conexion a internet
+#Activar conexion de red e internet
 def activate_connection(connection_name):
 	command = f"nmcli connection up {connection_name}"
 	result = subprocess.run(command, shell=True, capture_output=True, text=True)
@@ -125,7 +158,7 @@ def activate_connection(connection_name):
 		print(f"Error al activar la conexión '{connection_name}':\n{result.stderr}")
 		return False
 
-#desactivar conexion a internet
+#desactivar conexion de red e internet
 def deactivate_connection(connection_name):
 	command = f"nmcli connection down {connection_name}"
 	result = subprocess.run(command, shell=True, capture_output=True, text=True)
@@ -137,11 +170,34 @@ def deactivate_connection(connection_name):
 		print(f"Error al desactivar la conexión '{connection_name}':\n{result.stderr}")
 		return False     
 
-#Modificacion Valor de la metrica en la tabla route y no es temporal
+#Modificacion del valor de la metrica en la tabla route y no es temporal
 def set_route_metric(connection_name, metric_value):
-	command = f"nmcli connection modify {connection_name} ipv4.route-metric {metric_value}"
+	command = f"sudo nmcli connection modify {connection_name} ipv4.route-metric {metric_value}"
 	subprocess.run(command, shell=True)
 	print(f"Se ha establecido 'ipv4.route-metric' en {metric_value} para '{connection_name}'.")
+ 
+#Modificacion Valor de la metrica en la tabla route y es temporal. Se borra al reiniciar la pc
+def set_route_metric_temporal(interface, gateway, metric):
+	"""Configura la ruta predeterminada para una interfaz."""
+	try:
+		# Agrega la ruta predeterminada
+		subprocess.check_output(
+			f"ip route add default via {gateway} dev {interface} metric {metric}",
+			shell=True,
+			stderr=subprocess.DEVNULL,
+		)
+	except subprocess.CalledProcessError:
+		pass  # Maneja el error si el comando falla
+
+	try:
+		# Elimina rutas predeterminadas conflictivas
+		subprocess.check_output(
+			f"ip route del default dev {interface}",
+			shell=True,
+			stderr=subprocess.DEVNULL,
+		)
+	except subprocess.CalledProcessError:
+		pass  # Maneja el error si el comando falla
 
 #Modificacion del valor de la prioridad de conexion automatica de la interface de red
 def set_connection_priority(connection_name, priority):
@@ -202,28 +258,35 @@ def check_connectivity(interface): #, con_prio, val_metric
 		St = "Desconectado" 
 		return St #, ip, connections,is_up
 
-#Modificacion Valor de la metrica en la tabla route y es temporal. Se borra al reiniciar la pc
-def set_route(interface, gateway, metric):
-	"""Configura la ruta predeterminada para una interfaz."""
+#Modificacion de las rutas y es temporal. Se borra al reiniciar la pc
+def add_route(interface, gateway):
 	try:
 		# Agrega la ruta predeterminada
+		#Ej:  sudo ip route add default via 192.168.42.129 dev eth1
 		subprocess.check_output(
-			f"ip route add default via {gateway} dev {interface} metric {metric}",
+			f"sudo ip route add default via {gateway} dev {interface}",
 			shell=True,
 			stderr=subprocess.DEVNULL,
 		)
+		print(f"Se agregó la Ruta correctamente para la interface {interface} y gateway {gateway}")
 	except subprocess.CalledProcessError:
+		print(f"NO se pudo agregar la Ruta correctamente para la interface {interface} y gateway {gateway}")
 		pass  # Maneja el error si el comando falla
 
+def del_route(interface):
 	try:
-		# Elimina rutas predeterminadas conflictivas
+		# Elimina rutas predeterminadas 
+		#Ej:  sudo ip route del default dev wlan0
 		subprocess.check_output(
-			f"ip route del default dev {interface}",
+			f"sudo ip route del default dev {interface}",
 			shell=True,
 			stderr=subprocess.DEVNULL,
 		)
+		print(f"Ruta borrada correctamente para la interface {interface}")
 	except subprocess.CalledProcessError:
+		print(f"NO se pudo borrar la Ruta correctamente para la interface {interface}")
 		pass  # Maneja el error si el comando falla
+
 
 def ConexCelular():
 	if check_interface_status(USB_INTERFACE) and check_connectivity(USB_INTERFACE) == "Conectado" and ip_interface(USB_INTERFACE) != "0.0.0.0":
@@ -320,13 +383,15 @@ def ConexFibra():
 		#Envio de mensaje de aviso de corte de conexion
 		#enviarMensaje_a_mi("Conexión a internet desde Fibra óptica DESCONECTADA")
 		if Aux_Conex_Celular == "False" and activate_connection(Celular)== True:
-			deactivate_connection(Fibra)
-			#enviarMensaje_a_mi("Conexión a internet conmutada a Celular y CONECTADA")
-			#Envio TRUE a la variable Aux_Conex_Celular a la base de datos
-			Aux_Conex_Celular = "True"
+			Ruta_Predeterminada = get_default_route_ip(USB_INTERFACE)
+			del_route(WIFI_INTERFACE) #Borra la ruta por defecto de la wifi
+			add_route(USB_INTERFACE,Ruta_Predeterminada) #Se agrega ruta celular por defecto 
+			Aux_Conex_Celular = "True" #Var Auxiliar para guardar en base datos
 			Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
 			Parametros = (Aux_Conex_Celular, "DomoServer")
-			SQLCMD_To_MariaDB(Consulta, Parametros)				
+			SQLCMD_To_MariaDB(Consulta, Parametros)		
+			#enviarMensaje_a_mi("Conexión a internet conmutada a Celular y CONECTADA")
+			#Envio TRUE a la variable Aux_Conex_Celular a la base de datos		
 			
 		elif Aux_Conex_Celular == "False" and activate_connection(Celular)== False:
 			#enviarMensaje_a_mi("Fallo en la conmutación de la conexión a internet a través de Celular. \n Próximo intento de conmutación a celular en 3 segundos. ")
@@ -360,9 +425,13 @@ def cerrar_programa(signal, frame):
 
 
 if __name__ == "__main__":
-
+	#Se estable la prioridad de conexion de cada interface de red
+	set_connection_priority(Fibra,200) #Conexion de fibra
+	set_connection_priority(Celular,100) #Conexion celular
+	set_connection_priority("ConexFibraMesh",50) #conexion de fibra a traves de cable red usando la red mesh
+	# Se ejecuta la función una vez antes al inicio del programa antes del periodo de 10 seg. 
 	ConexFibra()      
-	Ctrl_conex_fibra = Temporizador_offDelay(30,ConexFibra)
+	Ctrl_conex_fibra = Temporizador_offDelay(10,ConexFibra)
 	Ctrl_conex_fibra.start()#/.cancel    
 	#ConexCelular() 	
 	#Ctrl_conex_celular = Temporizador_offDelay(60,ConexCelular)
@@ -376,16 +445,3 @@ if __name__ == "__main__":
 			signal.signal(signal.SIGINT, cerrar_programa) 
 
 
-"""            
-			# Si la WiFi esta activa, priorizarla
-			set_route(WIFI_INTERFACE, "192.168.68.1", 100)
-			set_route(USB_INTERFACE, "192.168.42.1", 200)
-			print("Interface Wifi Activa y con prioridad a internet")
-		else:
-			# Si la WiFi falla, usar la conexion USB
-			set_route(USB_INTERFACE, "192.168.42.1", 200)
-			set_route(WIFI_INTERFACE, "192.168.68.1", 100)
-			print("Interface Celular Activa y con prioridad a internet")
-		# Esperar 30 segundos antes de volver a verificar
-		time.sleep(30)
-"""
