@@ -420,7 +420,7 @@ def ConexFibra():
 def cerrar_programa(signal, frame):
 	print("\nPrograma interrumpido por el usuario. Cerrando...")
 	Ctrl_conex_fibra.cancel()
-	#Ctrl_conex_celular.cancel()
+	Ctrl_conex_celular.cancel()
 	print("Cerrando Hilos y Chauuuu")   
 	exit(0)
 
@@ -436,9 +436,9 @@ if __name__ == "__main__":
 	ConexFibra()      
 	Ctrl_conex_fibra = Temporizador_offDelay(10,ConexFibra)
 	Ctrl_conex_fibra.start()#/.cancel    
-	#ConexCelular() 	
-	#Ctrl_conex_celular = Temporizador_offDelay(60,ConexCelular)
-	#Ctrl_conex_celular.start()#/.cancel  
+	ConexCelular() 	
+	Ctrl_conex_celular = Temporizador_offDelay(120,ConexCelular)
+	Ctrl_conex_celular.start()#/.cancel  
 
 
 	while True:
