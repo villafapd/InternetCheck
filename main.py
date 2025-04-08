@@ -28,16 +28,16 @@ Celular = "ConexCelularDash"
 
 
 def get_default_route_ip(interface):
-    try:
-        result = subprocess.run(
-            ['nmcli', '-t', '-f', 'IP4.GATEWAY', 'device', 'show', interface],
-            stdout=subprocess.PIPE,
-            text=True
-        )
-        ip_address = result.stdout.strip().split(':')[-1]  # Extrae solo la IP
-        return ip_address if ip_address else None
-    except Exception as e:
-        return None
+	try:
+		result = subprocess.run(
+			['nmcli', '-t', '-f', 'IP4.GATEWAY', 'device', 'show', interface],
+			stdout=subprocess.PIPE,
+			text=True
+		)
+		ip_address = result.stdout.strip().split(':')[-1]  # Extrae solo la IP
+		return ip_address if ip_address else None
+	except Exception as e:
+		return None
 
 
 
@@ -340,12 +340,13 @@ def ConexFibra():
 			conn.commit()
 		del conn, cur
 		if Aux_Conex_Celular == "True":
-			if activate_connection(Fibra):
-				deactivate_connection(Celular)
-				Aux_Conex_Celular = "False"
-				Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
-				Parametros = (Aux_Conex_Celular, "DomoServer")
-				SQLCMD_To_MariaDB(Consulta, Parametros)	
+			Ruta_Predeterminada = get_default_route_ip(WIFI_INTERFACE)
+			del_route(USB_INTERFACE) #Borra la ruta por defecto de la USB
+			add_route(WIFI_INTERFACE,Ruta_Predeterminada) #Se agrega ruta fibra por defecto 
+			Aux_Conex_Celular = "False"
+			Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
+			Parametros = (Aux_Conex_Celular, "DomoServer")
+			SQLCMD_To_MariaDB(Consulta, Parametros)	
 			
 	else:
 		hora, minutos, segundos, dia, mes, ano = HoraFecha()
