@@ -25,7 +25,29 @@ USB_INTERFACE = "eth1"
 Fibra = "RedWifi6_Mesh_IoT"
 Celular = "ConexCelularDash"
 
+# Abrir el archivo de texto en modo lectura
+with open("/home/villafapd/Documents/ConfigEspeciales/BotTelegram.txt", "r") as archivo:
+	# Leer las líneas del archivo
+	lineas = archivo.readlines()
+# Inicializar las variables
+USER = ""
+PASSWORD = ""
+idBot = ""
+idGrupo = ""
+idmio = ""
 
+# Procesar las lineas del archivo
+for linea in lineas:
+	if linea.startswith("idBot_CasaDanielBot"):
+		idBot = linea.split("=")[1].strip().strip("'")
+	elif linea.startswith("idGrupo"):
+		idGrupo = linea.split("=")[1].strip().strip("'")
+	elif linea.startswith("idmio"):
+		idmio = linea.split("=")[1].strip().strip("'") 
+	elif linea.startswith("USER"):
+		USER = linea.split("=")[1].strip().strip("'")
+	elif linea.startswith("PASSWORD"):
+		PASSWORD = linea.split("=")[1].strip().strip("'")
 
 def get_default_route_ip(interface):
 	try:
@@ -38,13 +60,6 @@ def get_default_route_ip(interface):
 		return ip_address if ip_address else None
 	except Exception as e:
 		return None
-
-
-
-
-	
-
-
 
 #Reestablecer el valor de ipv4.route-metric ""
 def reset_route_metric(connection_name):
@@ -59,66 +74,17 @@ def delete_connection(connection_name):
 	print(f"La conexión '{connection_name}' ha sido eliminada.")
 
 def enviarMensaje(mensaje):
-	# Abrir el archivo de texto en modo lectura
-	with open("/home/villafapd/Documents/ConfigEspeciales/BotTelegram.txt", "r") as archivo:
-		# Leer las líneas del archivo
-		lineas = archivo.readlines()
-
-	# Inicializar las variables
-	idBot = ""
-	idGrupo = ""
-
-	# Procesar las lineas del archivo
-	for linea in lineas:
-		if linea.startswith("idBot"):
-			idBot = linea.split("=")[1].strip().strip("'")
-		elif linea.startswith("idGrupo"):
-			idGrupo = linea.split("=")[1].strip().strip("'")
-		elif linea.startswith("idmio"):
-			idmio = linea.split("=")[1].strip().strip("'")
-
 	url = f'https://api.telegram.org/bot{idBot}/sendMessage'
 	requests.post(url, data={'chat_id': idGrupo, 'text': mensaje, 'parse_mode': 'HTML'})
 	print("Mensaje de Respuesta Telegram vía url api")
 
 def enviarMensaje_a_mi(mensaje):
-	# Abrir el archivo de texto en modo lectura
-	with open("/home/villafapd/Documents/ConfigEspeciales/BotTelegram.txt", "r") as archivo:
-		# Leer las líneas del archivo
-		lineas = archivo.readlines()
-
-	# Inicializar las variables
-	idBot = ""
-	idmio = ""
-
-	# Procesar las lineas del archivo
-	for linea in lineas:
-		if linea.startswith("idBot"):
-			idBot = linea.split("=")[1].strip().strip("'")
-		elif linea.startswith("idGrupo"):
-			idGrupo = linea.split("=")[1].strip().strip("'")
-		elif linea.startswith("idmio"):
-			idmio = linea.split("=")[1].strip().strip("'")
-
 	url = f'https://api.telegram.org/bot{idBot}/sendMessage'
 	requests.post(url, data={'chat_id': idmio, 'text': mensaje, 'parse_mode': 'HTML'})
 	print("Mensaje de Respuesta Telegram vía url api")
 
 #Consulta a DB
 def SQLCMD_To_MariaDB(Consulta, Parametros):
-	# Abrir el archivo de texto en modo lectura
-	with open("/home/villafapd/Documents/ConfigEspeciales/BotTelegram.txt", "r") as archivo:
-		# Leer las líneas del archivo
-		lineas = archivo.readlines()
-	# Inicializar las variables
-	USER = ""
-	PASSWORD = ""
-	# Procesar las lineas del archivo
-	for linea in lineas:
-		if linea.startswith("USER"):
-			USER = linea.split("=")[1].strip().strip("'")
-		elif linea.startswith("PASSWORD"):
-			PASSWORD = linea.split("=")[1].strip().strip("'")
 	conn = mariadb.connect(user=USER, password=PASSWORD, database="homeserver")  #, host="127.0.0.1", port=3306, 
 	cur = conn.cursor()
 	cur.execute (Consulta, Parametros) 
@@ -314,19 +280,6 @@ def ConexFibra():
 		Consulta ="UPDATE Configserver SET ST_Conex_Fibra = %s WHERE NombreServer = %s" 
 		Parametros = ("Conectado", "DomoServer")
 		SQLCMD_To_MariaDB(Consulta, Parametros)		
-		# Abrir el archivo de texto en modo lectura
-		with open("/home/villafapd/Documents/ConfigEspeciales/BotTelegram.txt", "r") as archivo:
-			# Leer las líneas del archivo
-			lineas = archivo.readlines()
-		# Inicializar las variables
-		USER = ""
-		PASSWORD = ""
-		# Procesar las lineas del archivo
-		for linea in lineas:
-			if linea.startswith("USER"):
-				USER = linea.split("=")[1].strip().strip("'")
-			elif linea.startswith("PASSWORD"):
-				PASSWORD = linea.split("=")[1].strip().strip("'")
 		#Consulto a la DB el estado de la variable Aux_Conex_Celular
 		query = "SELECT Aux_Conex_Celular FROM {} WHERE {} = {}".format('Configserver', 'ID_Servidor', str(1))
 		with mariadb.connect(user=USER, password=PASSWORD, database="homeserver") as conn:
@@ -354,20 +307,7 @@ def ConexFibra():
 		#Envio Estado de conexion a la base de datos
 		Consulta ="UPDATE Configserver SET ST_Conex_Fibra = %s WHERE NombreServer = %s" 
 		Parametros = ("Desconectado", "DomoServer")
-		SQLCMD_To_MariaDB(Consulta, Parametros)	 
-		with open("/home/villafapd/Documents/ConfigEspeciales/BotTelegram.txt", "r") as archivo:
-			# Leer las líneas del archivo
-			lineas = archivo.readlines()
-		# Inicializar las variables
-		USER = ""
-		PASSWORD = ""
-		# Procesar las lineas del archivo
-		for linea in lineas:
-			if linea.startswith("USER"):
-				USER = linea.split("=")[1].strip().strip("'")
-			elif linea.startswith("PASSWORD"):
-				PASSWORD = linea.split("=")[1].strip().strip("'")
-  
+		SQLCMD_To_MariaDB(Consulta, Parametros)	   
 		#Consulto a la DB el estado de la variable Aux_Conex_Celular
 		query = "SELECT Aux_Conex_Celular FROM {} WHERE {} = {}".format('Configserver', 'ID_Servidor', str(1))
 		with mariadb.connect(user=USER, password=PASSWORD, database="homeserver") as conn:
