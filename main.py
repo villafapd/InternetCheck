@@ -15,6 +15,10 @@ import requests
 from ClaseTimer import Temporizador_offDelay
 from datetime import timedelta, datetime
 
+import setproctitle
+
+setproctitle.setproctitle("InternetChecker")
+
 # Dirección a verificar (puede ser un servidor confiable como Google)
 CHECK_HOST = "bing.com"
 # Interfaces de red
