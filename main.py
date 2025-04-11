@@ -5,6 +5,7 @@ import socket
 import fcntl
 import struct
 import psutil
+from psutil import Process, STATUS_RUNNING
 import threading
 import signal
 import time
@@ -52,6 +53,35 @@ for linea in lineas:
 		USER = linea.split("=")[1].strip().strip("'")
 	elif linea.startswith("PASSWORD"):
 		PASSWORD = linea.split("=")[1].strip().strip("'")
+
+#@profile
+def watchDog () :
+	Consulta ="UPDATE Configserver SET WatchDog = %s WHERE ID_Servidor = %s"
+	Parametros = ("WatchDog_OK", "3")
+	SQLCMD_To_MariaDB(Consulta, Parametros)	
+	del Consulta, Parametros
+	
+#@profile	
+def PID_Proceso(): 
+	# Obtén el PID de tu proceso
+	pid = os.getpid()
+	#Crea un objeto Process
+	p = psutil.Process(pid)
+	# Obtén la información de la CPU
+	
+	#print_terminal("PID: " + str(p.pid))
+	#print_terminal("Estado Proceso: " + str(p.status))
+	if p.status() == STATUS_RUNNING:
+		#print("DomoServer está corriendo y disponible como servidor")
+		ST_IntChecker = "Corriendo"
+	else:
+		#print_terminal ("DomoServer no está disponible")
+		ST_IntChecker = "Parado"
+	
+	Consulta ="UPDATE Configserver SET PID_Asignado = %s, EstadoServer = %s WHERE NombreServer = %s" 
+	Parametros = (str(p.pid), ST_IntChecker, "InternetChecker")
+	SQLCMD_To_MariaDB(Consulta, Parametros)
+	del Consulta, Parametros
 
 def get_default_route_ip(interface):
 	try:
@@ -365,6 +395,7 @@ def cerrar_programa(signal, frame):
 	print("\nPrograma interrumpido por el usuario. Cerrando...")
 	Ctrl_conex_fibra.cancel()
 	Ctrl_conex_celular.cancel()
+	WatchDog.cancel()
 	print("Cerrando Hilos y Chauuuu")   
 	exit(0)
 
@@ -372,6 +403,11 @@ def cerrar_programa(signal, frame):
 
 
 if __name__ == "__main__":
+	#Envio de estado de PID proceso a la DB
+	PID_Proceso()
+	#Envio de estado de Watchdog a la DB
+	WatchDog = Temporizador_offDelay(5, watchDog)
+	WatchDog.start()    
 	#Se estable la prioridad de conexion de cada interface de red
 	set_connection_priority(Fibra,200) #Conexion de fibra
 	set_connection_priority(Celular,100) #Conexion celular
