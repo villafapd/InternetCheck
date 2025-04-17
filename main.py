@@ -26,9 +26,12 @@ CHECK_HOST = "bing.com"
 WIFI_INTERFACE = "wlan0"
 CABLE_INTERFACE = "eth0"
 USB_INTERFACE = "eth1"
+BLUETOOH_INTERFACE = "bnep0"
+BLUETOOH_INTERFACE_aux = "60\:72\:0B\:44\:E3\:3D"
 #Nombre Conexión
 Fibra = "RedWifi6_Mesh_IoT"
-Celular = "ConexCelularDash"
+Celular_USB = "ConexCelularDash"
+Celular_Bluetooh = "DashXL"
 
 # Abrir el archivo de texto en modo lectura
 with open("/home/villafapd/Documents/ConfigEspeciales/BotTelegram.txt", "r") as archivo:
@@ -221,7 +224,22 @@ def nombre_conexion(interface):
 			if device == interface:
 				nombre_conex = connection if connection != "--" else None
 				return nombre_conex
-  
+
+#Obtener el nombre de la conexion de red local
+def nombre_conexion_cel(interface):
+	result = subprocess.run(['nmcli', '-t', '-f', 'DEVICE,CONNECTION', 'device'], stdout=subprocess.PIPE, text=True)
+
+	for line in result.stdout.split('\n'):
+		if line:
+			partes = line.split(':')
+			device = ":".join(partes[:-1])  # Une las partes para preservar los ":"
+			if device == interface:
+				# El último elemento es el nombre de la conexión
+				nombre_conex = partes[-1]
+				return nombre_conex
+
+
+
 #Procesamiento para obtener la IP de la interface de red
 def get_ip_address(ifname):
 	try:
@@ -289,16 +307,16 @@ def del_route(interface):
 
 
 def ConexCelular():
-	if check_interface_status(USB_INTERFACE) and check_connectivity(USB_INTERFACE) == "Conectado" and ip_interface(USB_INTERFACE) != "0.0.0.0":
+	if check_interface_status(BLUETOOH_INTERFACE) and check_connectivity(BLUETOOH_INTERFACE) == "Conectado" and ip_interface(BLUETOOH_INTERFACE) != "0.0.0.0":
 		hora, minutos, segundos, dia, mes, ano = HoraFecha()
-		print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {USB_INTERFACE} con mombre asignado {nombre_conexion(USB_INTERFACE)} está habilitada y está {check_connectivity(USB_INTERFACE)} a internet y con dirección ip: {ip_interface(USB_INTERFACE)}")  
+		print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {BLUETOOH_INTERFACE} con mombre asignado {nombre_conexion_cel(BLUETOOH_INTERFACE_aux)} está habilitada y está {check_connectivity(BLUETOOH_INTERFACE)} a internet y con dirección ip: {ip_interface(BLUETOOH_INTERFACE)}")  
 		#Envio Estado de conexion a la base de datos
 		Consulta ="UPDATE Configserver SET ST_Conex_Celular = %s WHERE NombreServer = %s" 
 		Parametros = ("Conectado", "DomoServer")
 		SQLCMD_To_MariaDB(Consulta, Parametros)   
 	else:
 		hora, minutos, segundos, dia, mes, ano = HoraFecha()
-		print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {USB_INTERFACE} con mombre asignado {nombre_conexion(USB_INTERFACE)} no está habilitada")   
+		print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {BLUETOOH_INTERFACE} con mombre asignado {nombre_conexion(BLUETOOH_INTERFACE)} no está habilitada")   
 		#Envio Estado de conexion a la base de datos
 		Consulta ="UPDATE Configserver SET ST_Conex_Celular = %s WHERE NombreServer = %s" 
 		Parametros = ("Desconectado", "DomoServer")
@@ -328,7 +346,7 @@ def ConexFibra():
 		del conn, cur
 		if Aux_Conex_Celular == "True":
 			Ruta_Predeterminada = get_default_route_ip(WIFI_INTERFACE)
-			del_route(USB_INTERFACE) #Borra la ruta por defecto de la USB
+			del_route(BLUETOOH_INTERFACE) #Borra la ruta por defecto de la USB
 			add_route(WIFI_INTERFACE,Ruta_Predeterminada) #Se agrega ruta fibra por defecto 
 			Aux_Conex_Celular = "False"
 			Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
@@ -357,27 +375,27 @@ def ConexFibra():
   
 		#Envio de mensaje de aviso de corte de conexion
 		#enviarMensaje_a_mi("Conexión a internet desde Fibra óptica DESCONECTADA")
-		if Aux_Conex_Celular == "False" and activate_connection(Celular)== True:
-			Ruta_Predeterminada = get_default_route_ip(USB_INTERFACE)
+		if Aux_Conex_Celular == "False" and activate_connection(Celular_Bluetooh)== True:
+			Ruta_Predeterminada = get_default_route_ip(BLUETOOH_INTERFACE)
 			del_route(WIFI_INTERFACE) #Borra la ruta por defecto de la wifi
-			add_route(USB_INTERFACE,Ruta_Predeterminada) #Se agrega ruta celular por defecto 
+			add_route(BLUETOOH_INTERFACE,Ruta_Predeterminada) #Se agrega ruta celular por defecto 
 			Aux_Conex_Celular = "True" #Var Auxiliar para guardar en base datos
 			Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
 			Parametros = (Aux_Conex_Celular, "DomoServer")
 			SQLCMD_To_MariaDB(Consulta, Parametros)		
-			#enviarMensaje_a_mi("Conexión a internet conmutada a Celular y CONECTADA")
+			#enviarMensaje_a_mi("Conexión a internet conmutada a Celular_Bluetooh y CONECTADA")
 			#Envio TRUE a la variable Aux_Conex_Celular a la base de datos		
 			
-		elif Aux_Conex_Celular == "False" and activate_connection(Celular)== False:
-			#enviarMensaje_a_mi("Fallo en la conmutación de la conexión a internet a través de Celular. \n Próximo intento de conmutación a celular en 3 segundos. ")
+		elif Aux_Conex_Celular == "False" and activate_connection(Celular_Bluetooh)== False:
+			#enviarMensaje_a_mi("Fallo en la conmutación de la conexión a internet a través de Celular_Bluetooh. \n Próximo intento de conmutación a celular en 3 segundos. ")
 			print("Espera de 3 seg. para nuevo reintentoo")
 			time.sleep(3)
-			if activate_connection(Celular):
-				Ruta_Predeterminada = get_default_route_ip(USB_INTERFACE)
+			if activate_connection(Celular_Bluetooh):
+				Ruta_Predeterminada = get_default_route_ip(BLUETOOH_INTERFACE)
 				del_route(WIFI_INTERFACE) #Borra la ruta por defecto de la wifi
-				add_route(USB_INTERFACE,Ruta_Predeterminada) #Se agrega ruta celular por defecto        
-				#enviarMensaje_a_mi("Luego del reintento en la conmutación de la conexión a internet a través de Celular, se ha conectado exitosamente.")
-				#enviarMensaje_a_mi("Conexión a internet conmutada a Celular y CONECTADA")
+				add_route(BLUETOOH_INTERFACE,Ruta_Predeterminada) #Se agrega ruta celular por defecto        
+				#enviarMensaje_a_mi("Luego del reintento en la conmutación de la conexión a internet a través de Celular_Bluetooh, se ha conectado exitosamente.")
+				#enviarMensaje_a_mi("Conexión a internet conmutada a Celular_Bluetooh y CONECTADA")
 				#Envio TRUE a la variable Aux_Conex_Celular a la base de datos
 				Aux_Conex_Celular = "True"
 				Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
@@ -410,7 +428,7 @@ if __name__ == "__main__":
 	WatchDog.start()    
 	#Se estable la prioridad de conexion de cada interface de red
 	set_connection_priority(Fibra,200) #Conexion de fibra
-	set_connection_priority(Celular,100) #Conexion celular
+	set_connection_priority(Celular_Bluetooh,100) #Conexion celular
 	set_connection_priority("ConexFibraMesh",50) #conexion de fibra a traves de cable red usando la red mesh
 	# Se ejecuta la función una vez antes al inicio del programa antes del periodo de 10 seg. 
 	ConexFibra()      
