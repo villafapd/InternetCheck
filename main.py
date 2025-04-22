@@ -316,7 +316,7 @@ def ConexCelular():
 		SQLCMD_To_MariaDB(Consulta, Parametros)   
 	else:
 		hora, minutos, segundos, dia, mes, ano = HoraFecha()
-		print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {BLUETOOH_INTERFACE} con mombre asignado {nombre_conexion(BLUETOOH_INTERFACE)} no está habilitada")   
+		print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {BLUETOOH_INTERFACE} con mombre asignado {nombre_conexion_cel(BLUETOOH_INTERFACE)} no está habilitada")   
 		#Envio Estado de conexion a la base de datos
 		Consulta ="UPDATE Configserver SET ST_Conex_Celular = %s WHERE NombreServer = %s" 
 		Parametros = ("Desconectado", "DomoServer")
