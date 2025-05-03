@@ -27,11 +27,11 @@ WIFI_INTERFACE = "wlan0"
 CABLE_INTERFACE = "eth0"
 USB_INTERFACE = "eth1"
 BLUETOOH_INTERFACE = "bnep0"
-BLUETOOH_INTERFACE_aux = "60\:72\:0B\:44\:E3\:3D"
+BLUETOOH_INTERFACE_aux = "C0\:17\:4D\:2C\:8E\:C6" #"60\:72\:0B\:44\:E3\:3D"
 #Nombre Conexión
 Fibra = "RedWifi6_Mesh_IoT"
 Celular_USB = "ConexCelularDash"
-Celular_Bluetooh = "DashXL"
+Celular_Bluetooh = "RedGalaxyJ2Prime"
 
 # Abrir el archivo de texto en modo lectura
 with open("/home/villafapd/Documents/ConfigEspeciales/BotTelegram.txt", "r") as archivo:
