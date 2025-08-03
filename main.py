@@ -28,6 +28,7 @@ CABLE_INTERFACE = "eth0"
 USB_INTERFACE = "eth1"
 BLUETOOH_INTERFACE = "bnep0"
 BLUETOOH_INTERFACE_aux = "C0\:17\:4D\:2C\:8E\:C6" #"60\:72\:0B\:44\:E3\:3D"
+BLUETOOH_INTERFACE_aux2 = "C0:17:4D:2C:8E:C6"
 #Nombre Conexión
 Fibra = "RedWifi6_Mesh_IoT"
 Celular_USB = "ConexCelularDash"
@@ -56,6 +57,9 @@ for linea in lineas:
 		USER = linea.split("=")[1].strip().strip("'")
 	elif linea.startswith("PASSWORD"):
 		PASSWORD = linea.split("=")[1].strip().strip("'")
+
+ 
+
 
 #@profile
 def watchDog () :
@@ -295,6 +299,7 @@ def del_route(interface):
 	try:
 		# Elimina rutas predeterminadas 
 		#Ej:  sudo ip route del default dev wlan0
+		# sudo ip route del default
 		subprocess.check_output(
 			f"sudo ip route del default dev {interface}",
 			shell=True,
@@ -304,6 +309,23 @@ def del_route(interface):
 	except subprocess.CalledProcessError:
 		print(f"NO se pudo borrar la Ruta correctamente para la interface {interface}")
 		pass  # Maneja el error si el comando falla
+
+
+def check_statado_conex_internet():
+	#Verifico si la placa de red esta habilitada, conectada a la red local, con IP asignada y con conexion a internet
+	if check_interface_status(WIFI_INTERFACE) and ip_interface(WIFI_INTERFACE) == "192.168.68.100" and check_connectivity(WIFI_INTERFACE) == "Conectado" and ip_interface(WIFI_INTERFACE) != "0.0.0.0" and check_interface_status(BLUETOOH_INTERFACE) and check_connectivity(BLUETOOH_INTERFACE) == "Conectado" and ip_interface(BLUETOOH_INTERFACE) != "0.0.0.0":
+		hora, minutos, segundos, dia, mes, ano = HoraFecha()
+		print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {WIFI_INTERFACE} con mombre asignado {nombre_conexion(WIFI_INTERFACE)} está habilitada y está {check_connectivity(WIFI_INTERFACE)} a internet y con dirección ip: {ip_interface(WIFI_INTERFACE)}")	
+    
+		Aux_Conex_Celular = "True"
+		Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
+		Parametros = (Aux_Conex_Celular, "InternetChecker")
+		SQLCMD_To_MariaDB(Consulta, Parametros)	
+	else:
+		Aux_Conex_Celular = "False"
+		Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
+		Parametros = (Aux_Conex_Celular, "InternetChecker")
+		SQLCMD_To_MariaDB(Consulta, Parametros)	    
 
 
 def ConexCelular():
@@ -376,7 +398,7 @@ def ConexFibra():
 		#Envio de mensaje de aviso de corte de conexion
 		#enviarMensaje_a_mi("Conexión a internet desde Fibra óptica DESCONECTADA")
 		if Aux_Conex_Celular == "False" and activate_connection(Celular_Bluetooh)== True:
-			Ruta_Predeterminada = get_default_route_ip(BLUETOOH_INTERFACE)
+			Ruta_Predeterminada = get_default_route_ip(BLUETOOH_INTERFACE_aux2)
 			del_route(WIFI_INTERFACE) #Borra la ruta por defecto de la wifi
 			add_route(BLUETOOH_INTERFACE,Ruta_Predeterminada) #Se agrega ruta celular por defecto 
 			Aux_Conex_Celular = "True" #Var Auxiliar para guardar en base datos
@@ -431,10 +453,7 @@ if __name__ == "__main__":
 	set_connection_priority(Celular_Bluetooh,100) #Conexion celular
 	set_connection_priority("ConexFibraMesh",50) #conexion de fibra a traves de cable red usando la red mesh
  
-	Aux_Conex_Celular = "True"
-	Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
-	Parametros = (Aux_Conex_Celular, "InternetChecker")
-	SQLCMD_To_MariaDB(Consulta, Parametros)				
+	check_statado_conex_internet()			
 
 	# Se ejecuta la función una vez antes al inicio del programa antes del periodo de 10 seg. 
 	ConexFibra()      
