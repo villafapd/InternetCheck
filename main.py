@@ -330,10 +330,10 @@ def ConexFibra():
 		print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {WIFI_INTERFACE} con mombre asignado {nombre_conexion(WIFI_INTERFACE)} está habilitada y está {check_connectivity(WIFI_INTERFACE)} a internet y con dirección ip: {ip_interface(WIFI_INTERFACE)}")	
 		#Envio Estado de conexion a la base de datos
 		Consulta ="UPDATE Configserver SET ST_Conex_Fibra = %s WHERE NombreServer = %s" 
-		Parametros = ("Conectado", "DomoServer")
+		Parametros = ("Conectado", "InternetChecker")
 		SQLCMD_To_MariaDB(Consulta, Parametros)		
 		#Consulto a la DB el estado de la variable Aux_Conex_Celular
-		query = "SELECT Aux_Conex_Celular FROM {} WHERE {} = {}".format('Configserver', 'ID_Servidor', str(1))
+		query = "SELECT Aux_Conex_Celular FROM {} WHERE {} = {}".format('Configserver', 'ID_Servidor', str(3))
 		with mariadb.connect(user=USER, password=PASSWORD, database="homeserver") as conn:
 			with conn.cursor() as cur:
 				cur.execute(query)
@@ -346,11 +346,11 @@ def ConexFibra():
 		del conn, cur
 		if Aux_Conex_Celular == "True":
 			Ruta_Predeterminada = get_default_route_ip(WIFI_INTERFACE)
-			del_route(BLUETOOH_INTERFACE) #Borra la ruta por defecto de la USB
+			del_route(BLUETOOH_INTERFACE) #Borra la ruta por defecto de la Bluetooh/USB
 			add_route(WIFI_INTERFACE,Ruta_Predeterminada) #Se agrega ruta fibra por defecto 
 			Aux_Conex_Celular = "False"
 			Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
-			Parametros = (Aux_Conex_Celular, "DomoServer")
+			Parametros = (Aux_Conex_Celular, "InternetChecker")
 			SQLCMD_To_MariaDB(Consulta, Parametros)	
 			
 	else:
@@ -358,10 +358,10 @@ def ConexFibra():
 		print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {WIFI_INTERFACE} con mombre asignado {nombre_conexion(WIFI_INTERFACE)} no está habilitada") 
 		#Envio Estado de conexion a la base de datos
 		Consulta ="UPDATE Configserver SET ST_Conex_Fibra = %s WHERE NombreServer = %s" 
-		Parametros = ("Desconectado", "DomoServer")
+		Parametros = ("Desconectado", "InternetChecker")
 		SQLCMD_To_MariaDB(Consulta, Parametros)	   
 		#Consulto a la DB el estado de la variable Aux_Conex_Celular
-		query = "SELECT Aux_Conex_Celular FROM {} WHERE {} = {}".format('Configserver', 'ID_Servidor', str(1))
+		query = "SELECT Aux_Conex_Celular FROM {} WHERE {} = {}".format('Configserver', 'ID_Servidor', str(3))
 		with mariadb.connect(user=USER, password=PASSWORD, database="homeserver") as conn:
 			with conn.cursor() as cur:
 				cur.execute(query)
@@ -381,7 +381,7 @@ def ConexFibra():
 			add_route(BLUETOOH_INTERFACE,Ruta_Predeterminada) #Se agrega ruta celular por defecto 
 			Aux_Conex_Celular = "True" #Var Auxiliar para guardar en base datos
 			Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
-			Parametros = (Aux_Conex_Celular, "DomoServer")
+			Parametros = (Aux_Conex_Celular, "InternetChecker")
 			SQLCMD_To_MariaDB(Consulta, Parametros)		
 			#enviarMensaje_a_mi("Conexión a internet conmutada a Celular_Bluetooh y CONECTADA")
 			#Envio TRUE a la variable Aux_Conex_Celular a la base de datos		
@@ -399,7 +399,7 @@ def ConexFibra():
 				#Envio TRUE a la variable Aux_Conex_Celular a la base de datos
 				Aux_Conex_Celular = "True"
 				Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
-				Parametros = (Aux_Conex_Celular, "DomoServer")
+				Parametros = (Aux_Conex_Celular, "InternetChecker")
 				SQLCMD_To_MariaDB(Consulta, Parametros)				
 	
 			else:
@@ -430,6 +430,12 @@ if __name__ == "__main__":
 	set_connection_priority(Fibra,200) #Conexion de fibra
 	set_connection_priority(Celular_Bluetooh,100) #Conexion celular
 	set_connection_priority("ConexFibraMesh",50) #conexion de fibra a traves de cable red usando la red mesh
+ 
+	Aux_Conex_Celular = "True"
+	Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
+	Parametros = (Aux_Conex_Celular, "InternetChecker")
+	SQLCMD_To_MariaDB(Consulta, Parametros)				
+
 	# Se ejecuta la función una vez antes al inicio del programa antes del periodo de 10 seg. 
 	ConexFibra()      
 	Ctrl_conex_fibra = Temporizador_offDelay(10,ConexFibra)
