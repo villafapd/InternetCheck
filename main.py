@@ -301,7 +301,7 @@ def del_route(interface):
 		#Ej:  sudo ip route del default dev wlan0
 		# sudo ip route del default
 		subprocess.check_output(
-			f"sudo ip route del default dev {interface}",
+			f"sudo ip route del default", #dev {interface}
 			shell=True,
 			stderr=subprocess.DEVNULL,
 		)
