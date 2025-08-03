@@ -270,7 +270,7 @@ def check_connectivity(interface): #, con_prio, val_metric
 	"""Verifica la conectividad a Internet usando ping."""
 	try:
 		subprocess.check_output(
-			["ping", "-c", "3", "-I", interface, CHECK_HOST],
+			["ping", "-c", "4", "-I", interface, CHECK_HOST],
 			stderr=subprocess.STDOUT
 		)
 		St = "Conectado"
