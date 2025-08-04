@@ -11,7 +11,8 @@ import signal
 import time
 import mariadb
 import requests
-
+import schedule
+from functools import partial
 
 from ClaseTimer import Temporizador_offDelay
 from datetime import timedelta, datetime
@@ -310,7 +311,6 @@ def del_route(interface):
 		print(f"NO se pudo borrar la Ruta correctamente para la interface {interface}")
 		pass  # Maneja el error si el comando falla
 
-
 def check_statado_conex_internet():
 	#Verifico si la placa de red esta habilitada, conectada a la red local, con IP asignada y con conexion a internet
 	if check_interface_status(WIFI_INTERFACE) and ip_interface(WIFI_INTERFACE) == "192.168.68.100" and check_connectivity(WIFI_INTERFACE) == "Conectado" and ip_interface(WIFI_INTERFACE) != "0.0.0.0" and check_interface_status(BLUETOOH_INTERFACE) and check_connectivity(BLUETOOH_INTERFACE) == "Conectado" and ip_interface(BLUETOOH_INTERFACE) != "0.0.0.0":
@@ -326,7 +326,6 @@ def check_statado_conex_internet():
 		Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
 		Parametros = (Aux_Conex_Celular, "InternetChecker")
 		SQLCMD_To_MariaDB(Consulta, Parametros)	    
-
 
 def ConexCelular():
 	if check_interface_status(BLUETOOH_INTERFACE) and check_connectivity(BLUETOOH_INTERFACE) == "Conectado" and ip_interface(BLUETOOH_INTERFACE) != "0.0.0.0":
@@ -425,17 +424,13 @@ def ConexFibra():
 				SQLCMD_To_MariaDB(Consulta, Parametros)				
 	
 			else:
-				print("Fallo de reintento en la conmutación a la red celular. Espera de 30 seg. para reinicio de secuencia de conexión")
-   
-			
-		  
-		
+				print("Fallo de reintento en la conmutación a la red celular. Espera de 30 seg. para reinicio de secuencia de conexión")		
 			
 def cerrar_programa(signal, frame):
 	print("\nPrograma interrumpido por el usuario. Cerrando...")
-	Ctrl_conex_fibra.cancel()
-	Ctrl_conex_celular.cancel()
-	WatchDog.cancel()
+	#Ctrl_conex_fibra.cancel()
+	#Ctrl_conex_celular.cancel()
+	#WatchDog.cancel()
 	print("Cerrando Hilos y Chauuuu")   
 	exit(0)
 
@@ -446,8 +441,10 @@ if __name__ == "__main__":
 	#Envio de estado de PID proceso a la DB
 	PID_Proceso()
 	#Envio de estado de Watchdog a la DB
-	WatchDog = Temporizador_offDelay(5, watchDog)
-	WatchDog.start()    
+	#WatchDog = Temporizador_offDelay(5, watchDog)
+	#WatchDog.start() 
+	schedule.every(5).seconds.do(partial(watchDog))
+   
 	#Se estable la prioridad de conexion de cada interface de red
 	set_connection_priority(Fibra,200) #Conexion de fibra
 	set_connection_priority(Celular_Bluetooh,100) #Conexion celular
@@ -457,17 +454,21 @@ if __name__ == "__main__":
 
 	# Se ejecuta la función una vez antes al inicio del programa antes del periodo de 10 seg. 
 	ConexFibra()      
-	Ctrl_conex_fibra = Temporizador_offDelay(10,ConexFibra)
-	Ctrl_conex_fibra.start()#/.cancel    
+	#Ctrl_conex_fibra = Temporizador_offDelay(30,ConexFibra)
+	#Ctrl_conex_fibra.start()#/.cancel    
 	ConexCelular() 	
-	Ctrl_conex_celular = Temporizador_offDelay(120,ConexCelular)
-	Ctrl_conex_celular.start()#/.cancel  
+	#Ctrl_conex_celular = Temporizador_offDelay(120,ConexCelular)
+	#Ctrl_conex_celular.start()#/.cancel  
 
-
+    # Se ejecuta cada 10 segundos
+	schedule.every(30).seconds.do(partial(ConexFibra))
+	schedule.every(120).seconds.do(partial(ConexCelular))		
 	while True:
 		# Manejar el cierre del terminal
 			signal.signal(signal.SIGTERM, cerrar_programa)
 			#Manejar el cierre del programa con interrupcion de teclado ctrl+c
 			signal.signal(signal.SIGINT, cerrar_programa) 
+			schedule.run_pending()
+			time.sleep(2)   
 
 
