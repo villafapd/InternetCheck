@@ -469,6 +469,6 @@ if __name__ == "__main__":
 			#Manejar el cierre del programa con interrupcion de teclado ctrl+c
 			signal.signal(signal.SIGINT, cerrar_programa) 
 			schedule.run_pending()
-			time.sleep(2)   
+			time.sleep(3.5)   
 
 
