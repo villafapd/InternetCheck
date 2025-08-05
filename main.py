@@ -21,21 +21,27 @@ import setproctitle
 
 setproctitle.setproctitle("InternetChecker")
 
-# Dirección a verificar (puede ser un servidor confiable como Google)
+# Dirección a verificar (puede ser un servidor confiable como Google/Bing)
 CHECK_HOST = "bing.com"
-# Interfaces de red
+# Interfaces de red Wifi
 WIFI_INTERFACE = "wlan0"
+# Interfaces de red cable
 CABLE_INTERFACE = "eth0"
+# Interfaces de red via USB desde el celular
 USB_INTERFACE = "eth1"
+# Interfaces de red a traves de Bluetooh
 BLUETOOH_INTERFACE = "bnep0"
+# Interfaces de red a traves auxiliares de Bluetooh y necesarias para el uso en determinadas funciones
 BLUETOOH_INTERFACE_aux = "C0\:17\:4D\:2C\:8E\:C6" #"60\:72\:0B\:44\:E3\:3D"
 BLUETOOH_INTERFACE_aux2 = "C0:17:4D:2C:8E:C6"
-#Nombre Conexión
+#Nombre Conexión Fibra
 Fibra = "RedWifi6_Mesh_IoT"
+#Nombre Conexión Celular Dash
 Celular_USB = "ConexCelularDash"
+#Nombre Conexión Galaxy
 Celular_Bluetooh = "RedGalaxyJ2Prime"
 
-# Abrir el archivo de texto en modo lectura
+# Abrir el archivo de texto en modo lectura para obatener datos de usuario.
 with open("/home/villafapd/Documents/ConfigEspeciales/BotTelegram.txt", "r") as archivo:
 	# Leer las líneas del archivo
 	lineas = archivo.readlines()
