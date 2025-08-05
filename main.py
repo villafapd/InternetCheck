@@ -14,7 +14,7 @@ import requests
 import schedule
 from functools import partial
 
-from ClaseTimer import Temporizador_offDelay
+#from ClaseTimer import Temporizador_offDelay
 from datetime import timedelta, datetime
 
 import setproctitle
@@ -428,9 +428,6 @@ def ConexFibra():
 			
 def cerrar_programa(signal, frame):
 	print("\nPrograma interrumpido por el usuario. Cerrando...")
-	#Ctrl_conex_fibra.cancel()
-	#Ctrl_conex_celular.cancel()
-	#WatchDog.cancel()
 	print("Cerrando Hilos y Chauuuu")   
 	exit(0)
 
@@ -441,34 +438,26 @@ if __name__ == "__main__":
 	#Envio de estado de PID proceso a la DB
 	PID_Proceso()
 	#Envio de estado de Watchdog a la DB
-	#WatchDog = Temporizador_offDelay(5, watchDog)
-	#WatchDog.start() 
 	schedule.every(5).seconds.do(partial(watchDog))
    
-	#Se estable la prioridad de conexion de cada interface de red
+	#Se establece la prioridad de conexion de cada interface de red
 	set_connection_priority(Fibra,200) #Conexion de fibra
 	set_connection_priority(Celular_Bluetooh,100) #Conexion celular
 	set_connection_priority("ConexFibraMesh",50) #conexion de fibra a traves de cable red usando la red mesh
- 
+	#Chequeo del estado de conexion a internet desde Fibra y celular 
 	check_statado_conex_internet()			
-
 	# Se ejecuta la función una vez antes al inicio del programa antes del periodo de 10 seg. 
 	ConexFibra()      
-	#Ctrl_conex_fibra = Temporizador_offDelay(30,ConexFibra)
-	#Ctrl_conex_fibra.start()#/.cancel    
 	ConexCelular() 	
-	#Ctrl_conex_celular = Temporizador_offDelay(120,ConexCelular)
-	#Ctrl_conex_celular.start()#/.cancel  
-
-    # Se ejecuta cada 10 segundos
+    # Se ejecutan cada 30 y 120 segundos
 	schedule.every(30).seconds.do(partial(ConexFibra))
 	schedule.every(120).seconds.do(partial(ConexCelular))		
 	while True:
-		# Manejar el cierre del terminal
+			# Manejar el cierre del terminal
 			signal.signal(signal.SIGTERM, cerrar_programa)
 			#Manejar el cierre del programa con interrupcion de teclado ctrl+c
 			signal.signal(signal.SIGINT, cerrar_programa) 
 			schedule.run_pending()
-			time.sleep(3.5)   
+			time.sleep(3)   
 
 
