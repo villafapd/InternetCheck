@@ -19,7 +19,7 @@ from datetime import timedelta, datetime
 
 import setproctitle
 
-setproctitle.setproctitle("InternetChecker")
+setproctitle.setproctitle("ServerDomo-InternetChecker")
 
 # Dirección a verificar (puede ser un servidor confiable como Google/Bing)
 CHECK_HOST = "bing.com"
