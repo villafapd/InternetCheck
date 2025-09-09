@@ -226,6 +226,7 @@ def check_interface_status(interface):
 	return is_up
  
 #Obtener el nombre de la conexion de red local
+"""
 def nombre_conexion(interface):
 	result = subprocess.run(['nmcli', '-t', '-f', 'DEVICE,CONNECTION', 'device'], stdout=subprocess.PIPE, text=True)
 
@@ -235,6 +236,17 @@ def nombre_conexion(interface):
 			if device == interface:
 				nombre_conex = connection if connection != "--" else None
 				return nombre_conex
+"""
+
+# Obtener el nombre de la conexi�n de red local para una interfaz espec�fica
+def nombre_conexion(interface):
+    comando = f"nmcli -t -f DEVICE,CONNECTION device | grep '^{interface}:' | cut -d: -f2"
+    result = subprocess.run(comando, shell=True, stdout=subprocess.PIPE, text=True)
+    nombre = result.stdout.strip()
+    return nombre
+
+
+
 
 #Obtener el nombre de la conexion de red local
 def nombre_conexion_cel(interface):
@@ -317,11 +329,11 @@ def del_route(interface):
 		print(f"NO se pudo borrar la Ruta correctamente para la interface {interface}")
 		pass  # Maneja el error si el comando falla
 
-def check_statado_conex_internet():
+def check_estado_conex_internet():
 	#Verifico si la placa de red esta habilitada, conectada a la red local, con IP asignada y con conexion a internet
 	if check_interface_status(WIFI_INTERFACE) and ip_interface(WIFI_INTERFACE) == "192.168.68.100" and check_connectivity(WIFI_INTERFACE) == "Conectado" and ip_interface(WIFI_INTERFACE) != "0.0.0.0" and check_interface_status(BLUETOOH_INTERFACE) and check_connectivity(BLUETOOH_INTERFACE) == "Conectado" and ip_interface(BLUETOOH_INTERFACE) != "0.0.0.0":
-		#hora, minutos, segundos, dia, mes, ano = HoraFecha()
-		#print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {WIFI_INTERFACE} con mombre asignado {nombre_conexion(WIFI_INTERFACE)} está habilitada y está {check_connectivity(WIFI_INTERFACE)} a internet y con dirección ip: {ip_interface(WIFI_INTERFACE)}")	
+		hora, minutos, segundos, dia, mes, ano = HoraFecha()
+		print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {WIFI_INTERFACE} con mombre asignado {nombre_conexion(WIFI_INTERFACE)} está habilitada y está {check_connectivity(WIFI_INTERFACE)} a internet y con dirección ip: {ip_interface(WIFI_INTERFACE)}")	
     
 		Aux_Conex_Celular = "True"
 		Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
@@ -450,14 +462,14 @@ if __name__ == "__main__":
 	set_connection_priority(Fibra,200) #Conexion de fibra
 	set_connection_priority(Celular_Bluetooh,100) #Conexion celular
 	set_connection_priority("ConexFibraMesh",50) #conexion de fibra a traves de cable red usando la red mesh
-	#hequeo del estado de conexion a internet desde Fibra y celular 
-	check_statado_conex_internet()			
+	#chequeo del estado de conexion a internet desde Fibra y celular 
+	check_estado_conex_internet()			
 	# Se ejecuta la función una vez antes al inicio del programa antes del periodo de 10 seg. 
 	ConexFibra()      
 	ConexCelular() 	
     # Se ejecutan cada 30 y 120 segundos
-	#schedule.every(30).seconds.do(partial(ConexFibra))
-	#schedule.every(120).seconds.do(partial(ConexCelular))		
+	schedule.every(30).seconds.do(partial(ConexFibra))
+	schedule.every(120).seconds.do(partial(ConexCelular))		
 	while True:
 			# Manejar el cierre del terminal
 			signal.signal(signal.SIGTERM, cerrar_programa)
