@@ -221,9 +221,12 @@ def set_connection_priority(connection_name, priority):
 
 #Chequeo de interface de red este habilitada 
 def check_interface_status(interface):
-	active_interfaces = psutil.net_if_stats()
-	is_up = active_interfaces[interface].isup
-	return is_up
+	try:
+		active_interfaces = psutil.net_if_stats()
+		is_up = active_interfaces[interface].isup
+		return is_up
+	except Exception as e:
+		return None
  
 #Obtener el nombre de la conexion de red local
 """
@@ -240,10 +243,10 @@ def nombre_conexion(interface):
 
 # Obtener el nombre de la conexi�n de red local para una interfaz espec�fica
 def nombre_conexion(interface):
-    comando = f"nmcli -t -f DEVICE,CONNECTION device | grep '^{interface}:' | cut -d: -f2"
-    result = subprocess.run(comando, shell=True, stdout=subprocess.PIPE, text=True)
-    nombre = result.stdout.strip()
-    return nombre
+	comando = f"nmcli -t -f DEVICE,CONNECTION device | grep '^{interface}:' | cut -d: -f2"
+	result = subprocess.run(comando, shell=True, stdout=subprocess.PIPE, text=True)
+	nombre = result.stdout.strip()
+	return nombre
 
 
 
@@ -334,7 +337,7 @@ def check_estado_conex_internet():
 	if check_interface_status(WIFI_INTERFACE) and ip_interface(WIFI_INTERFACE) == "192.168.68.100" and check_connectivity(WIFI_INTERFACE) == "Conectado" and ip_interface(WIFI_INTERFACE) != "0.0.0.0" and check_interface_status(BLUETOOH_INTERFACE) and check_connectivity(BLUETOOH_INTERFACE) == "Conectado" and ip_interface(BLUETOOH_INTERFACE) != "0.0.0.0":
 		hora, minutos, segundos, dia, mes, ano = HoraFecha()
 		print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {WIFI_INTERFACE} con mombre asignado {nombre_conexion(WIFI_INTERFACE)} está habilitada y está {check_connectivity(WIFI_INTERFACE)} a internet y con dirección ip: {ip_interface(WIFI_INTERFACE)}")	
-    
+	
 		Aux_Conex_Celular = "True"
 		Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
 		Parametros = (Aux_Conex_Celular, "InternetChecker")
@@ -467,7 +470,7 @@ if __name__ == "__main__":
 	# Se ejecuta la función una vez antes al inicio del programa antes del periodo de 10 seg. 
 	ConexFibra()      
 	ConexCelular() 	
-    # Se ejecutan cada 30 y 120 segundos
+	# Se ejecutan cada 30 y 120 segundos
 	schedule.every(30).seconds.do(partial(ConexFibra))
 	schedule.every(120).seconds.do(partial(ConexCelular))		
 	while True:
