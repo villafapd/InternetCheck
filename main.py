@@ -37,7 +37,10 @@ BLUETOOH_INTERFACE_aux2 = "C0:17:4D:2C:8E:C6"
 #Nombre Conexión Fibra
 Fibra = "RedWifi6_Mesh"
 #Nombre Conexión Celular Dash
+
 Celular_USB = "ConexCelularDash"
+#Modem USB
+Modem_USB = "ModemUsb"
 #Nombre Conexión Galaxy
 Celular_Bluetooh = "RedGalaxyJ2Prime"
 
@@ -334,7 +337,7 @@ def del_route(interface):
 
 def check_estado_conex_internet():
 	#Verifico si la placa de red esta habilitada, conectada a la red local, con IP asignada y con conexion a internet
-	if check_interface_status(WIFI_INTERFACE) and ip_interface(WIFI_INTERFACE) == "192.168.68.100" and check_connectivity(WIFI_INTERFACE) == "Conectado" and ip_interface(WIFI_INTERFACE) != "0.0.0.0" and check_interface_status(BLUETOOH_INTERFACE) and check_connectivity(BLUETOOH_INTERFACE) == "Conectado" and ip_interface(BLUETOOH_INTERFACE) != "0.0.0.0":
+	if check_interface_status(WIFI_INTERFACE) and ip_interface(WIFI_INTERFACE) == "192.168.68.100" and check_connectivity(WIFI_INTERFACE) == "Conectado" and ip_interface(WIFI_INTERFACE) != "0.0.0.0" and check_interface_status(USB_INTERFACE) and check_connectivity(USB_INTERFACE) == "Conectado" and ip_interface(USB_INTERFACE) != "0.0.0.0":
 		hora, minutos, segundos, dia, mes, ano = HoraFecha()
 		print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {WIFI_INTERFACE} con mombre asignado {nombre_conexion(WIFI_INTERFACE)} está habilitada y está {check_connectivity(WIFI_INTERFACE)} a internet y con dirección ip: {ip_interface(WIFI_INTERFACE)}")	
 	
@@ -349,9 +352,9 @@ def check_estado_conex_internet():
 		SQLCMD_To_MariaDB(Consulta, Parametros)	    
 
 def ConexCelular():
-	if check_interface_status(BLUETOOH_INTERFACE) and check_connectivity(BLUETOOH_INTERFACE) == "Conectado" and ip_interface(BLUETOOH_INTERFACE) != "0.0.0.0":
+	if check_interface_status(USB_INTERFACE) and check_connectivity(USB_INTERFACE) == "Conectado" and ip_interface(USB_INTERFACE) != "0.0.0.0":
 		hora, minutos, segundos, dia, mes, ano = HoraFecha()
-		print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {BLUETOOH_INTERFACE} con mombre asignado {nombre_conexion_cel(BLUETOOH_INTERFACE_aux)} está habilitada y está {check_connectivity(BLUETOOH_INTERFACE)} a internet y con dirección ip: {ip_interface(BLUETOOH_INTERFACE)}")  
+		print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {USB_INTERFACE} con mombre asignado {nombre_conexion_cel(USB_INTERFACE)} está habilitada y está {check_connectivity(USB_INTERFACE)} a internet y con dirección ip: {ip_interface(USB_INTERFACE)}")  
 		#Envio Estado de conexion a la base de datos
 		Consulta ="UPDATE Configserver SET ST_Conex_Celular = %s WHERE NombreServer = %s" 
 		Parametros = ("Conectado", "InternetChecker")
@@ -463,7 +466,7 @@ if __name__ == "__main__":
    
 	#Se establece la prioridad de conexion de cada interface de red
 	set_connection_priority(Fibra,200) #Conexion de fibra
-	set_connection_priority(Celular_Bluetooh,100) #Conexion celular
+	set_connection_priority(Modem_USB,100) #Conexion celular
 	set_connection_priority("ConexFibraMesh",50) #conexion de fibra a traves de cable red usando la red mesh
 	#chequeo del estado de conexion a internet desde Fibra y celular 
 	check_estado_conex_internet()			
