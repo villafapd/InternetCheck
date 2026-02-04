@@ -361,7 +361,7 @@ def ConexCelular():
 		SQLCMD_To_MariaDB(Consulta, Parametros)   
 	else:
 		hora, minutos, segundos, dia, mes, ano = HoraFecha()
-		print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {BLUETOOH_INTERFACE} con mombre asignado {nombre_conexion_cel(BLUETOOH_INTERFACE)} no está habilitada")   
+		print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {USB_INTERFACE} con mombre asignado {nombre_conexion_cel(USB_INTERFACE)} no está habilitada")   
 		#Envio Estado de conexion a la base de datos
 		Consulta ="UPDATE Configserver SET ST_Conex_Celular = %s WHERE NombreServer = %s" 
 		Parametros = ("Desconectado", "InternetChecker")
@@ -391,7 +391,7 @@ def ConexFibra():
 		del conn, cur
 		if Aux_Conex_Celular == "True":
 			Ruta_Predeterminada = get_default_route_ip(WIFI_INTERFACE)
-			del_route(BLUETOOH_INTERFACE) #Borra la ruta por defecto de la Bluetooh/USB
+			del_route(USB_INTERFACE) #Borra la ruta por defecto de la Bluetooh/USB
 			add_route(WIFI_INTERFACE,Ruta_Predeterminada) #Se agrega ruta fibra por defecto 
 			Aux_Conex_Celular = "False"
 			Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
@@ -420,10 +420,10 @@ def ConexFibra():
   
 		#Envio de mensaje de aviso de corte de conexion
 		#enviarMensaje_a_mi("Conexión a internet desde Fibra óptica DESCONECTADA")
-		if Aux_Conex_Celular == "False" and activate_connection(Celular_Bluetooh)== True:
+		if Aux_Conex_Celular == "False" and activate_connection(Modem_USB)== True:
 			Ruta_Predeterminada = get_default_route_ip(BLUETOOH_INTERFACE_aux2)
 			del_route(WIFI_INTERFACE) #Borra la ruta por defecto de la wifi
-			add_route(BLUETOOH_INTERFACE,Ruta_Predeterminada) #Se agrega ruta celular por defecto 
+			add_route(USB_INTERFACE,Ruta_Predeterminada) #Se agrega ruta celular por defecto 
 			Aux_Conex_Celular = "True" #Var Auxiliar para guardar en base datos
 			Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
 			Parametros = (Aux_Conex_Celular, "InternetChecker")
@@ -436,9 +436,9 @@ def ConexFibra():
 			print("Espera de 3 seg. para nuevo reintentoo")
 			time.sleep(3)
 			if activate_connection(Celular_Bluetooh):
-				Ruta_Predeterminada = get_default_route_ip(BLUETOOH_INTERFACE)
+				Ruta_Predeterminada = get_default_route_ip(USB_INTERFACE)
 				del_route(WIFI_INTERFACE) #Borra la ruta por defecto de la wifi
-				add_route(BLUETOOH_INTERFACE,Ruta_Predeterminada) #Se agrega ruta celular por defecto        
+				add_route(USB_INTERFACE,Ruta_Predeterminada) #Se agrega ruta celular por defecto        
 				#enviarMensaje_a_mi("Luego del reintento en la conmutación de la conexión a internet a través de Celular_Bluetooh, se ha conectado exitosamente.")
 				#enviarMensaje_a_mi("Conexión a internet conmutada a Celular_Bluetooh y CONECTADA")
 				#Envio TRUE a la variable Aux_Conex_Celular a la base de datos
