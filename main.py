@@ -421,7 +421,7 @@ def ConexFibra():
 		#Envio de mensaje de aviso de corte de conexion
 		#enviarMensaje_a_mi("Conexión a internet desde Fibra óptica DESCONECTADA")
 		if Aux_Conex_Celular == "False" and activate_connection(Modem_USB)== True:
-			Ruta_Predeterminada = get_default_route_ip(BLUETOOH_INTERFACE_aux2)
+			Ruta_Predeterminada = get_default_route_ip(USB_INTERFACE)
 			del_route(WIFI_INTERFACE) #Borra la ruta por defecto de la wifi
 			add_route(USB_INTERFACE,Ruta_Predeterminada) #Se agrega ruta celular por defecto 
 			Aux_Conex_Celular = "True" #Var Auxiliar para guardar en base datos
