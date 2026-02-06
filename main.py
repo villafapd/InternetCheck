@@ -27,17 +27,17 @@ CHECK_HOST = "bing.com"
 WIFI_INTERFACE = "wlan0"
 # Interfaces de red cable
 CABLE_INTERFACE = "eth0"
-# Interfaces de red via USB desde el celular
+# Interfaces de red via USB desde el celular (Dongle 4g)
 USB_INTERFACE = "eth1"
-# Interfaces de red a traves de Bluetooh
+# Interfaces de red a traves de Bluetooh usando Celular estandar
 BLUETOOH_INTERFACE = "bnep0"
 # Interfaces de red a traves auxiliares de Bluetooh y necesarias para el uso en determinadas funciones
 BLUETOOH_INTERFACE_aux = "C0\:17\:4D\:2C\:8E\:C6" #"60\:72\:0B\:44\:E3\:3D"
 BLUETOOH_INTERFACE_aux2 = "C0:17:4D:2C:8E:C6"
+
 #Nombre Conexión Fibra
 Fibra = "RedWifi6_Mesh"
 #Nombre Conexión Celular Dash
-
 Celular_USB = "ConexCelularDash"
 #Modem USB
 Modem_USB = "ModemUsb"
