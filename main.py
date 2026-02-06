@@ -470,7 +470,7 @@ if __name__ == "__main__":
 	ConexCelular() 	
 	# Se ejecutan cada 30 y 120 segundos
 	schedule.every(30).seconds.do(partial(ConexFibra))
-	schedule.every(120).seconds.do(partial(ConexCelular))		
+	schedule.every(60).seconds.do(partial(ConexCelular))		
 	while True:
 			# Manejar el cierre del terminal
 			signal.signal(signal.SIGTERM, cerrar_programa)
