@@ -251,9 +251,6 @@ def nombre_conexion(interface):
 	nombre = result.stdout.strip()
 	return nombre
 
-
-
-
 #Obtener el nombre de la conexion de red local
 def nombre_conexion_cel(interface):
 	result = subprocess.run(['nmcli', '-t', '-f', 'DEVICE,CONNECTION', 'device'], stdout=subprocess.PIPE, text=True)
@@ -266,8 +263,6 @@ def nombre_conexion_cel(interface):
 				# El último elemento es el nombre de la conexión
 				nombre_conex = partes[-1]
 				return nombre_conex
-
-
 
 #Procesamiento para obtener la IP de la interface de red
 def get_ip_address(ifname):
@@ -311,7 +306,7 @@ def add_route(interface, gateway):
 		# Agrega la ruta predeterminada
 		#Ej:  sudo ip route add default via 192.168.42.129 dev eth1
 		subprocess.check_output(
-			f"sudo ip route add default via {gateway} dev {interface}",
+			f"sudo ip route add default via {gateway} dev {interface} metric 10",
 			shell=True,
 			stderr=subprocess.DEVNULL,
 		)
@@ -431,11 +426,11 @@ def ConexFibra():
 			#enviarMensaje_a_mi("Conexión a internet conmutada a Celular_Bluetooh y CONECTADA")
 			#Envio TRUE a la variable Aux_Conex_Celular a la base de datos		
 			
-		elif Aux_Conex_Celular == "False" and activate_connection(Celular_Bluetooh)== False:
+		elif Aux_Conex_Celular == "False" and activate_connection(Modem_USB)== False:
 			#enviarMensaje_a_mi("Fallo en la conmutación de la conexión a internet a través de Celular_Bluetooh. \n Próximo intento de conmutación a celular en 3 segundos. ")
 			print("Espera de 3 seg. para nuevo reintentoo")
 			time.sleep(3)
-			if activate_connection(Celular_Bluetooh):
+			if activate_connection(Modem_USB):
 				Ruta_Predeterminada = get_default_route_ip(USB_INTERFACE)
 				del_route(WIFI_INTERFACE) #Borra la ruta por defecto de la wifi
 				add_route(USB_INTERFACE,Ruta_Predeterminada) #Se agrega ruta celular por defecto        
