@@ -332,19 +332,32 @@ def del_route(interface):
 
 def check_estado_conex_internet():
 	#Verifico si la placa de red esta habilitada, conectada a la red local, con IP asignada y con conexion a internet
-	if check_interface_status(WIFI_INTERFACE) and ip_interface(WIFI_INTERFACE) == "192.168.68.100" and check_connectivity(WIFI_INTERFACE) == "Conectado" and ip_interface(WIFI_INTERFACE) != "0.0.0.0" and check_interface_status(USB_INTERFACE) and check_connectivity(USB_INTERFACE) == "Conectado" and ip_interface(USB_INTERFACE) != "0.0.0.0":
-		hora, minutos, segundos, dia, mes, ano = HoraFecha()
-		print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {WIFI_INTERFACE} con mombre asignado {nombre_conexion(WIFI_INTERFACE)} está habilitada y está {check_connectivity(WIFI_INTERFACE)} a internet y con dirección ip: {ip_interface(WIFI_INTERFACE)}")	
-	
-		Aux_Conex_Celular = "True"
-		Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
-		Parametros = (Aux_Conex_Celular, "InternetChecker")
-		SQLCMD_To_MariaDB(Consulta, Parametros)	
-	else:
-		Aux_Conex_Celular = "False"
-		Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
-		Parametros = (Aux_Conex_Celular, "InternetChecker")
-		SQLCMD_To_MariaDB(Consulta, Parametros)	    
+	try:
+		if check_interface_status(USB_INTERFACE) and check_connectivity(USB_INTERFACE) == "Conectado" and ip_interface(USB_INTERFACE) != "0.0.0.0":
+			hora, minutos, segundos, dia, mes, ano = HoraFecha()
+			print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {USB_INTERFACE} con mombre asignado {nombre_conexion(USB_INTERFACE)} está habilitada y está {check_connectivity(USB_INTERFACE)} a internet y con dirección ip: {ip_interface(USB_INTERFACE)}")	
+		
+			Aux_Conex_Celular = "True"
+			Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
+			Parametros = (Aux_Conex_Celular, "InternetChecker")
+			SQLCMD_To_MariaDB(Consulta, Parametros)	
+			if check_connectivity(WIFI_INTERFACE) == "Conectado":   
+				enviarMensaje_a_mi("Conexión desde Fibra óptica y celular en estado normal y conectados a internet")
+			else:
+				enviarMensaje_a_mi("Conexión desde Fibra óptica DESCONECTADA a internet y conexion a internet desde celular CONECTADA")
+		else:
+			Aux_Conex_Celular = "False"
+			Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
+			Parametros = (Aux_Conex_Celular, "InternetChecker")
+			SQLCMD_To_MariaDB(Consulta, Parametros)	    
+			if check_connectivity(WIFI_INTERFACE) == "Conectado":
+				enviarMensaje_a_mi("Conexión desde Fibra óptica en estado normal y CONECTADA a internet y conexion a internet desde celular DESCONECTADA")
+			else:
+				enviarMensaje_a_mi("Conexión desde Fibra óptica DESCONECTADA a internet y conexion desde celular a internet CONECTADA")    
+
+	except Exception as e:
+		print (f" {str(e)}, Función Chequeo de estado conexion a internet")
+      
 
 def ConexCelular():
 	if check_interface_status(USB_INTERFACE) and check_connectivity(USB_INTERFACE) == "Conectado" and ip_interface(USB_INTERFACE) != "0.0.0.0":
@@ -386,8 +399,10 @@ def ConexFibra():
 		del conn, cur
 		if Aux_Conex_Celular == "True":
 			Ruta_Predeterminada = get_default_route_ip(WIFI_INTERFACE)
+			#Ruta_Predeterminada_USB = get_default_route_ip(USB_INTERFACE)
 			del_route(USB_INTERFACE) #Borra la ruta por defecto de la Bluetooh/USB
 			add_route(WIFI_INTERFACE,Ruta_Predeterminada) #Se agrega ruta fibra por defecto 
+			#add_route(USB_INTERFACE,Ruta_Predeterminada_USB)   
 			Aux_Conex_Celular = "False"
 			Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
 			Parametros = (Aux_Conex_Celular, "InternetChecker")
@@ -423,7 +438,7 @@ def ConexFibra():
 			Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
 			Parametros = (Aux_Conex_Celular, "InternetChecker")
 			SQLCMD_To_MariaDB(Consulta, Parametros)		
-			#enviarMensaje_a_mi("Conexión a internet conmutada a Celular_Bluetooh y CONECTADA")
+			enviarMensaje_a_mi("Conexión a internet conmutada a Celular por fallo en conexión de fibra óptica")
 			#Envio TRUE a la variable Aux_Conex_Celular a la base de datos		
 			
 		elif Aux_Conex_Celular == "False" and activate_connection(Modem_USB)== False:
@@ -435,7 +450,7 @@ def ConexFibra():
 				del_route(WIFI_INTERFACE) #Borra la ruta por defecto de la wifi
 				add_route(USB_INTERFACE,Ruta_Predeterminada) #Se agrega ruta celular por defecto        
 				#enviarMensaje_a_mi("Luego del reintento en la conmutación de la conexión a internet a través de Celular_Bluetooh, se ha conectado exitosamente.")
-				#enviarMensaje_a_mi("Conexión a internet conmutada a Celular_Bluetooh y CONECTADA")
+				enviarMensaje_a_mi("Conexión a internet conmutada a Celular y CONECTADA")
 				#Envio TRUE a la variable Aux_Conex_Celular a la base de datos
 				Aux_Conex_Celular = "True"
 				Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
