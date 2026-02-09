@@ -67,11 +67,14 @@ for linea in lineas:
 	elif linea.startswith("PASSWORD"):
 		PASSWORD = linea.split("=")[1].strip().strip("'")
 
- 
+#........................................................................................#Aqui se debe configurar que interface se usará y que tipo de conexion a internet se usará
+#........................................................................................
 INTERFACE_01 = WIFI_INTERFACE
 INTERFACE_02 = USB_INTERFACE
 TIPO_CONEXION_01 = Fibra
 TIPO_CONEXION_02 = Modem_USB 
+#----------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------
 
 #@profile
 def watchDog () :
@@ -344,9 +347,9 @@ def check_estado_conex_internet():
 			Parametros = (Aux_Conex_Celular, "InternetChecker")
 			SQLCMD_To_MariaDB(Consulta, Parametros)	
 			if check_connectivity(INTERFACE_01) == "Conectado":   
-				enviarMensaje_a_mi("Conexión desde Fibra óptica y celular en estado normal y conectados a internet")
+				enviarMensaje_a_mi(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> Conexión desde Fibra óptica y celular en estado normal y conectados a internet")
 			else:
-				enviarMensaje_a_mi("Conexión desde Fibra óptica DESCONECTADA a internet y conexion a internet desde celular CONECTADA")
+				enviarMensaje_a_mi(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> Conexión desde Fibra óptica DESCONECTADA a internet y conexion desde celular CONECTADA a internet")
 		else:
 			Aux_Conex_Celular = "False"
 			Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
@@ -440,7 +443,8 @@ def ConexFibra():
 			Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
 			Parametros = (Aux_Conex_Celular, "InternetChecker")
 			SQLCMD_To_MariaDB(Consulta, Parametros)		
-			enviarMensaje_a_mi("Conexión a internet conmutada a Celular por fallo en conexión de fibra óptica")
+			hora, minutos, segundos, dia, mes, ano = HoraFecha() 
+			enviarMensaje_a_mi(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> Conexión a internet conmutada a Celular por fallo en conexión de fibra óptica")
 			#Envio TRUE a la variable Aux_Conex_Celular a la base de datos		
 			
 		elif Aux_Conex_Celular == "False" and activate_connection(TIPO_CONEXION_02)== False:
@@ -480,7 +484,7 @@ if __name__ == "__main__":
 	set_connection_priority(TIPO_CONEXION_01,200) #Conexion de fibra
 	set_connection_priority(TIPO_CONEXION_02,100) #Conexion celular
 	set_connection_priority("ConexFibraMesh",50) #conexion de fibra a traves de cable red usando la red mesh
-	#chequeo del estado de conexion a internet desde Fibra y celular 
+	#chequeo del estado de conexion a internet desde celular 
 	check_estado_conex_internet()			
 	# Se ejecuta la función una vez antes al inicio del programa antes del periodo de 10 seg. 
 	ConexFibra()      
