@@ -489,9 +489,9 @@ if __name__ == "__main__":
 	# Se ejecuta la función una vez antes al inicio del programa antes del periodo de 10 seg. 
 	ConexFibra()      
 	ConexCelular() 	
-	# Se ejecutan cada 30 y 120 segundos
-	schedule.every(30).seconds.do(partial(ConexFibra))
-	schedule.every(45).seconds.do(partial(ConexCelular))		
+	# Se ejecutan cada 20 y 40 segundos
+	schedule.every(20).seconds.do(partial(ConexFibra))
+	schedule.every(40).seconds.do(partial(ConexCelular))		
 	while True:
 			# Manejar el cierre del terminal
 			signal.signal(signal.SIGTERM, cerrar_programa)
