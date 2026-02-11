@@ -13,10 +13,8 @@ import mariadb
 import requests
 import schedule
 from functools import partial
-
 #from ClaseTimer import Temporizador_offDelay
 from datetime import timedelta, datetime
-
 import setproctitle
 
 setproctitle.setproctitle("ServerDomo-InternetChecker")
@@ -67,21 +65,108 @@ for linea in lineas:
 	elif linea.startswith("PASSWORD"):
 		PASSWORD = linea.split("=")[1].strip().strip("'")
 
-#........................................................................................#Aqui se debe configurar que interface se usará y que tipo de conexion a internet se usará
+#....................................................................................
+# Aqui se debe configurar que interface se usará y que tipo de conexion a internet se usará
 #........................................................................................
 INTERFACE_01 = WIFI_INTERFACE
 INTERFACE_02 = USB_INTERFACE
 TIPO_CONEXION_01 = Fibra
 TIPO_CONEXION_02 = Modem_USB 
+
+ResetComAux = False
+ResetComAux_1 = False
+failover_desabilitado = False
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
 
+class GestorSchedule:
+	def __init__(self):
+		self.job_fibra = None
+		self.job_celular = None
+		self.detener = False
+
+	def iniciar(self):
+		self.job_fibra = schedule.every(20).seconds.do(self.wrapper_fibra)
+		self.job_celular = schedule.every(40).seconds.do(self.wrapper_celular)
+
+	def wrapper_fibra(self):
+		if not self.detener:
+			ConexFibra()
+
+	def wrapper_celular(self):
+		if not self.detener:
+			ConexCelular()
+
+	def detener_schedule(self):
+		print("Deteniendo schedule...")
+
+		if self.job_fibra:
+			schedule.cancel_job(self.job_fibra)
+			self.job_fibra = None
+
+		if self.job_celular:
+			schedule.cancel_job(self.job_celular)
+			self.job_celular = None
+
+		print("Schedule detenido.")
+
+def ConexFibra():
+	print("Fibra ejecutada")
+
+def ConexCelular():
+	print("Celular ejecutada")
+
+
+
+
+
+
+
 #@profile
 def watchDog () :
+	global ResetComAux, ResetComAux_1,failover_desabilitado
 	Consulta ="UPDATE Configserver SET WatchDog = %s WHERE ID_Servidor = %s"
 	Parametros = ("WatchDog_OK", "3")
 	SQLCMD_To_MariaDB(Consulta, Parametros)	
 	del Consulta, Parametros
+ 
+	query = "SELECT Modo_Failover, Cambio_Internet FROM {} WHERE {} = {}".format('Configserver', 'ID_Servidor', "3")
+	with mariadb.connect(user=USER, password=PASSWORD, database="homeserver") as conn:
+		with conn.cursor() as cur:
+			cur.execute(query)
+			while True:
+				row = cur.fetchone()
+				if row is None:
+					break
+				ModoFailover = int(row[0])
+				CambioInternet = int(row[1])
+		conn.commit()
+	if ModoFailover == 1 and ResetComAux == False:
+		ResetComAux = True
+		if check_estado_conex_internet():
+			gestor.detener = True
+			enviarMensaje_a_mi("Modo Failover deshabilitado por el usuario desde la aplicación móvil. Se ha detenido la ejecución de las funciones de chequeo de estado de conexión a internet y conmutación automática. Para reactivar el modo automático de chequeo de estado de conexión a internet y conmutación automática, se debe desactivar el Modo Failover desde la aplicación móvil.")  
+			failover_desabilitado = True
+	elif ResetComAux == True and ModoFailover == 0:
+		ResetComAux = False
+
+
+	if CambioInternet == 1 and ResetComAux_1 == False:
+		ResetComAux_1 = True
+		if failover_desabilitado:
+			enviarMensaje_a_mi("Cambio de conexión a internet desde celular realizado por el usuario desde la aplicación móvil. Para reactivar el modo automático de chequeo de estado de conexión a internet y conmutación automática, se debe habilitar el Modo Failover desde la aplicación móvil.")  
+			failover_desabilitado = False
+
+			if activate_connection(TIPO_CONEXION_02)== True:
+				Ruta_Predeterminada = get_default_route_ip(INTERFACE_02)
+				del_route(INTERFACE_01) #Borra la ruta por defecto de la wifi
+				add_route(INTERFACE_02,Ruta_Predeterminada) #Se agrega ruta celular por defecto 
+   
+		elif failover_desabilitado == False and check_connectivity(INTERFACE_01) == "Conectado" or check_connectivity(INTERFACE_02) == "Conectado":
+			enviarMensaje_a_mi("Para realizar el cambio de conexión a internet a celular primero se debe desabilitar el Modo Failover desde la aplicación móvil.") 
+      
+	elif ResetComAux_1 == True and CambioInternet == 0:
+		ResetComAux_1 = False
 	
 #@profile	
 def PID_Proceso(): 
@@ -347,23 +432,22 @@ def check_estado_conex_internet():
 			Parametros = (Aux_Conex_Celular, "InternetChecker")
 			SQLCMD_To_MariaDB(Consulta, Parametros)	
 			if check_connectivity(INTERFACE_01) == "Conectado":   
-				enviarMensaje_a_mi(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> Conexión desde Fibra óptica y celular en estado normal y conectados a internet")
-			else:
-				enviarMensaje_a_mi(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> Conexión desde Fibra óptica DESCONECTADA a internet y conexion desde celular CONECTADA a internet")
+				enviarMensaje_a_mi(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> Conexión desde Fibra óptica en estado normal y conectado a internet")
+			if check_connectivity(INTERFACE_02) == "Conectado":
+				enviarMensaje_a_mi(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> Conexión desde desde celular en estado normal y conectado a internet")
+			return True
 		else:
 			Aux_Conex_Celular = "False"
 			Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
 			Parametros = (Aux_Conex_Celular, "InternetChecker")
 			SQLCMD_To_MariaDB(Consulta, Parametros)	    
 			if check_connectivity(INTERFACE_01) == "Conectado":
-				enviarMensaje_a_mi("Conexión desde Fibra óptica en estado normal y CONECTADA a internet y conexion a internet desde celular DESCONECTADA")
-			else:
-				enviarMensaje_a_mi("Conexión desde Fibra óptica DESCONECTADA a internet y conexion desde celular a internet CONECTADA")    
-
+				enviarMensaje_a_mi("Conexión desde Fibra óptica en estado normal y CONECTADO a internet y conexion a internet desde celular DESCONECTADO")  
+			return False
 	except Exception as e:
 		print (f" {str(e)}, Función Chequeo de estado conexion a internet")
-      
-
+		return False
+	  
 def ConexCelular():
 	if check_interface_status(INTERFACE_02) and check_connectivity(INTERFACE_02) == "Conectado" and ip_interface(INTERFACE_02) != "0.0.0.0":
 		hora, minutos, segundos, dia, mes, ano = HoraFecha()
@@ -490,13 +574,24 @@ if __name__ == "__main__":
 	ConexFibra()      
 	ConexCelular() 	
 	# Se ejecutan cada 20 y 40 segundos
-	schedule.every(20).seconds.do(partial(ConexFibra))
-	schedule.every(40).seconds.do(partial(ConexCelular))		
+	#job_conex_fibra = schedule.every(20).seconds.do(partial(ConexFibra))
+	#job_conex_celular = schedule.every(40).seconds.do(partial(ConexCelular))
+ 
+	gestor = GestorSchedule()
+	gestor.iniciar()
+
+		
 	while True:
+
 			# Manejar el cierre del terminal
 			signal.signal(signal.SIGTERM, cerrar_programa)
 			#Manejar el cierre del programa con interrupcion de teclado ctrl+c
 			signal.signal(signal.SIGINT, cerrar_programa) 
+
+			if gestor.detener:
+				gestor.detener_schedule()
+				gestor.detener = False
+
 			schedule.run_pending()
 			time.sleep(3)   
 
