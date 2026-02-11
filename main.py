@@ -76,6 +76,7 @@ TIPO_CONEXION_02 = Modem_USB
 ResetComAux = False
 ResetComAux_1 = False
 failover_desabilitado = False
+conta_failover = 0
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
 
@@ -124,12 +125,19 @@ def ConexCelular():
 
 #@profile
 def watchDog () :
-	global ResetComAux, ResetComAux_1,failover_desabilitado
+	global ResetComAux, ResetComAux_1,failover_desabilitado, conta_failover
+
+	#----------------------------------------------------------------------- 
+	#WATCHDOG
+	#-----------------------------------------------------------------------
 	Consulta ="UPDATE Configserver SET WatchDog = %s WHERE ID_Servidor = %s"
 	Parametros = ("WatchDog_OK", "3")
 	SQLCMD_To_MariaDB(Consulta, Parametros)	
 	del Consulta, Parametros
- 
+
+    #-----------------------------------------------------------------------
+    #Modo Failover
+    #----------------------------------------------------------------------- 
 	query = "SELECT Modo_Failover, Cambio_Internet FROM {} WHERE {} = {}".format('Configserver', 'ID_Servidor', "3")
 	with mariadb.connect(user=USER, password=PASSWORD, database="homeserver") as conn:
 		with conn.cursor() as cur:
@@ -142,18 +150,28 @@ def watchDog () :
 				CambioInternet = int(row[1])
 		conn.commit()
 	if ModoFailover == 1 and ResetComAux == False:
+		conta_failover += 1
 		ResetComAux = True
-		if check_estado_conex_internet():
-			gestor.detener = True
-			enviarMensaje_a_mi("Modo Failover deshabilitado por el usuario desde la aplicación móvil. Se ha detenido la ejecución de las funciones de chequeo de estado de conexión a internet y conmutación automática. Para reactivar el modo automático de chequeo de estado de conexión a internet y conmutación automática, se debe desactivar el Modo Failover desde la aplicación móvil.")  
-			failover_desabilitado = True
+		if conta_failover == 1 :
+			if check_connectivity(INTERFACE_02) == "Conectado":
+				gestor.detener = True
+				enviarMensaje_a_mi("Modo Failover deshabilitado por el usuario desde la aplicación móvil. Se ha detenido la ejecución de las funciones de chequeo de estado de conexión a internet y conmutación automática. Para reactivar el modo automático de chequeo de estado de conexión a internet y conmutación automática, se debe desactivar el Modo Failover desde la aplicación móvil.")  
+				failover_desabilitado = True
+		if conta_failover >= 2:
+			conta_failover = 0
+			if check_connectivity(INTERFACE_02) == "Conectado":
+				gestor.detener = False
+				enviarMensaje_a_mi("Modo Failover habilitado por el usuario desde la aplicación móvil. Se ha habilitado la ejecución de las funciones de chequeo de estado de conexión a internet y conmutación automática.")  
+				failover_desabilitado = False
 	elif ResetComAux == True and ModoFailover == 0:
 		ResetComAux = False
 
-
+	#-----------------------------------------------------------------------
+	#Cambio de conexion a internet celular manual
+	#-----------------------------------------------------------------------
 	if CambioInternet == 1 and ResetComAux_1 == False:
 		ResetComAux_1 = True
-		if failover_desabilitado:
+		if failover_desabilitado and check_connectivity(INTERFACE_02) == "Conectado":
 			enviarMensaje_a_mi("Cambio de conexión a internet desde celular realizado por el usuario desde la aplicación móvil. Para reactivar el modo automático de chequeo de estado de conexión a internet y conmutación automática, se debe habilitar el Modo Failover desde la aplicación móvil.")  
 			failover_desabilitado = False
 
@@ -163,7 +181,7 @@ def watchDog () :
 				add_route(INTERFACE_02,Ruta_Predeterminada) #Se agrega ruta celular por defecto 
    
 		elif failover_desabilitado == False and check_connectivity(INTERFACE_01) == "Conectado" or check_connectivity(INTERFACE_02) == "Conectado":
-			enviarMensaje_a_mi("Para realizar el cambio de conexión a internet a celular primero se debe desabilitar el Modo Failover desde la aplicación móvil.") 
+			enviarMensaje_a_mi("Para realizar el cambio de conexión a internet a celular primero se debe desabilitar el Modo Failover automáico desde la aplicación móvil.") 
       
 	elif ResetComAux_1 == True and CambioInternet == 0:
 		ResetComAux_1 = False
