@@ -161,6 +161,7 @@ def watchDog () :
 			conta_failover = 0
 			if check_connectivity(INTERFACE_02) == "Conectado":
 				gestor.detener = False
+				gestor.iniciar()
 				enviarMensaje_a_mi("Modo Failover habilitado por el usuario desde la aplicación móvil. Se ha habilitado la ejecución de las funciones de chequeo de estado de conexión a internet y conmutación automática.")  
 				failover_desabilitado = False
 	elif ResetComAux == True and ModoFailover == 0:
