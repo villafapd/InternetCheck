@@ -606,10 +606,10 @@ if __name__ == "__main__":
 	set_connection_priority(TIPO_CONEXION_02,100) #Conexion celular
 	set_connection_priority("ConexFibraMesh",50) #conexion de fibra a traves de cable red usando la red mesh
 	#chequeo del estado de conexion a internet desde celular 
-	check_estado_conex_internet()			
+	#check_estado_conex_internet()			
 	# Se ejecuta la función una vez antes al inicio del programa antes del periodo de 10 seg. 
-	ConexFibra()      
-	ConexCelular() 	
+	#ConexFibra()      
+	#ConexCelular() 	
 	# Se ejecutan cada 20 y 40 segundos
 	#job_conex_fibra = schedule.every(20).seconds.do(partial(ConexFibra))
 	#job_conex_celular = schedule.every(40).seconds.do(partial(ConexCelular))
