@@ -119,25 +119,11 @@ def ConexCelular():
 
 
 
-
-
-
-
-#@profile
-def watchDog () :
+def cambio_internet():
 	global ResetComAux, ResetComAux_1,failover_desabilitado, conta_failover
-
-	#----------------------------------------------------------------------- 
-	#WATCHDOG
 	#-----------------------------------------------------------------------
-	Consulta ="UPDATE Configserver SET WatchDog = %s WHERE ID_Servidor = %s"
-	Parametros = ("WatchDog_OK", "3")
-	SQLCMD_To_MariaDB(Consulta, Parametros)	
-	del Consulta, Parametros
-
-    #-----------------------------------------------------------------------
-    #Modo Failover
-    #----------------------------------------------------------------------- 
+	#Modo Failover
+	#----------------------------------------------------------------------- 
 	query = "SELECT Modo_Failover, Cambio_Internet FROM {} WHERE {} = {}".format('Configserver', 'ID_Servidor', "3")
 	with mariadb.connect(user=USER, password=PASSWORD, database="homeserver") as conn:
 		with conn.cursor() as cur:
@@ -183,9 +169,20 @@ def watchDog () :
    
 		elif failover_desabilitado == False and check_connectivity(INTERFACE_01) == "Conectado" or check_connectivity(INTERFACE_02) == "Conectado":
 			enviarMensaje_a_mi("Para realizar el cambio de conexión a internet a celular primero se debe desabilitar el Modo Failover automáico desde la aplicación móvil.") 
-      
+	  
 	elif ResetComAux_1 == True and CambioInternet == 0:
 		ResetComAux_1 = False
+
+
+#@profile
+def watchDog () :
+	#----------------------------------------------------------------------- 
+	#WATCHDOG
+	#-----------------------------------------------------------------------
+	Consulta ="UPDATE Configserver SET WatchDog = %s WHERE ID_Servidor = %s"
+	Parametros = ("WatchDog_OK", "3")
+	SQLCMD_To_MariaDB(Consulta, Parametros)	
+	del Consulta, Parametros
 	
 #@profile	
 def PID_Proceso(): 
@@ -582,7 +579,7 @@ if __name__ == "__main__":
 	PID_Proceso()
 	#Envio de estado de Watchdog a la DB
 	schedule.every(5).seconds.do(partial(watchDog))
-   
+	schedule.every(4).seconds.do(partial(cambio_internet))
 	#Se establece la prioridad de conexion de cada interface de red
 	set_connection_priority(TIPO_CONEXION_01,200) #Conexion de fibra
 	set_connection_priority(TIPO_CONEXION_02,100) #Conexion celular
