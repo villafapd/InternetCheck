@@ -87,6 +87,9 @@ class GestorSchedule:
 		self.detener = False
 
 	def iniciar(self):
+		check_estado_conex_internet()
+		ConexFibra()      
+		ConexCelular()
 		self.job_fibra = schedule.every(20).seconds.do(self.wrapper_fibra)
 		self.job_celular = schedule.every(40).seconds.do(self.wrapper_celular)
 
@@ -109,13 +112,13 @@ class GestorSchedule:
 			schedule.cancel_job(self.job_celular)
 			self.job_celular = None
 
-		print("Confirmacion de tareas detenidas.")
+		print("Confirmación de tareas detenidas.")
 
 def ConexFibra():
-	print("Fibra ejecutada")
+	print("Monitoreo conexión de Fibra iniciado")
 
 def ConexCelular():
-	print("Celular ejecutada")
+	print("Monitoreo conexión de Celular iniciado")
 
 
 
