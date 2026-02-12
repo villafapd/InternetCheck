@@ -173,7 +173,6 @@ def cambio_internet():
 	elif ResetComAux_1 == True and CambioInternet == 0:
 		ResetComAux_1 = False
 
-
 #@profile
 def watchDog () :
 	#----------------------------------------------------------------------- 
