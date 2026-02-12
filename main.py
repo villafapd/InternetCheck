@@ -474,6 +474,7 @@ def check_estado_conex_internet():
 		return False
 	  
 def ConexCelular():
+    #Solo se usa para cehqueo de estado
 	if check_interface_status(INTERFACE_02) and check_connectivity(INTERFACE_02) == "Conectado" and ip_interface(INTERFACE_02) != "0.0.0.0":
 		hora, minutos, segundos, dia, mes, ano = HoraFecha()
 		print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {INTERFACE_02} con mombre {nombre_conexion_cel(INTERFACE_02)} está habilitada y está {check_connectivity(INTERFACE_02)} a internet y con dirección ip: {ip_interface(INTERFACE_02)}")  
