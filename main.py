@@ -99,7 +99,7 @@ class GestorSchedule:
 			ConexCelular()
 
 	def detener_schedule(self):
-		print("Deteniendo schedule...")
+		print("Deteniendo tareas Automatizadas...")
 
 		if self.job_fibra:
 			schedule.cancel_job(self.job_fibra)
@@ -109,7 +109,7 @@ class GestorSchedule:
 			schedule.cancel_job(self.job_celular)
 			self.job_celular = None
 
-		print("Schedule detenido.")
+		print("Confirmacion de tareas detenidas.")
 
 def ConexFibra():
 	print("Fibra ejecutada")
@@ -406,33 +406,33 @@ def check_connectivity(interface): #, con_prio, val_metric
 		return St #, ip, connections,is_up
 
 #Modificacion de las rutas y es temporal. Se borra al reiniciar la pc
-def add_route(interface, gateway):
+def add_route(interface, gateway, metrica):
 	try:
 		# Agrega la ruta predeterminada
 		#Ej:  sudo ip route add default via 192.168.42.129 dev eth1
 		subprocess.check_output(
-			f"sudo ip route add default via {gateway} dev {interface} metric 10",
+			f"sudo ip route add default via {gateway} dev {interface} metric {metrica}",
 			shell=True,
 			stderr=subprocess.DEVNULL,
 		)
-		print(f"Se agregó la Ruta correctamente para la interface {interface} y gateway {gateway}")
+		print(f"Se agregó la Ruta correctamente para la interface {interface} y gateway {gateway} y metrica {metrica}")
 	except subprocess.CalledProcessError:
-		print(f"NO se pudo agregar la Ruta correctamente para la interface {interface} y gateway {gateway}")
+		print(f"NO se pudo agregar la Ruta correctamente para la interface {interface} y gateway {gateway} y metrica {metrica}")
 		pass  # Maneja el error si el comando falla
 
 def del_route(interface):
 	try:
-		# Elimina rutas predeterminadas 
-		#Ej:  sudo ip route del default dev wlan0
-		# sudo ip route del default
+		# -----------------------------------------------------------
+		# Elimina rutas default solo para la interface seleccionada 
+		# -----------------------------------------------------------
 		subprocess.check_output(
-			f"sudo ip route del default", #dev {interface}
+			f"sudo ip route del default dev {interface}",
 			shell=True,
 			stderr=subprocess.DEVNULL,
 		)
-		print(f"Ruta borrada correctamente para la interface {interface}")
+		print(f"Ruta por defecto borrada correctamente para la interface {interface}")
 	except subprocess.CalledProcessError:
-		print(f"NO se pudo borrar la Ruta correctamente para la interface {interface}")
+		print(f"NO se pudo borrar la Ruta por defecto correctamente para la interface {interface}")
 		pass  # Maneja el error si el comando falla
 
 def check_estado_conex_internet():
@@ -503,10 +503,11 @@ def ConexFibra():
 		del conn, cur
 		if Aux_Conex_Celular == "True":
 			Ruta_Predeterminada = get_default_route_ip(INTERFACE_01)
-			#Ruta_Predeterminada_USB = get_default_route_ip(INTERFACE_02)
+			Ruta_Predeterminada_USB = get_default_route_ip(INTERFACE_02)
 			del_route(INTERFACE_02) #Borra la ruta por defecto de la Bluetooh/USB
-			add_route(INTERFACE_01,Ruta_Predeterminada) #Se agrega ruta fibra por defecto 
-			#add_route(INTERFACE_02,Ruta_Predeterminada_USB)   
+			del_route(INTERFACE_01)
+			add_route(INTERFACE_01,Ruta_Predeterminada,"10") #Se agrega ruta fibra por defecto 
+			add_route(INTERFACE_02,Ruta_Predeterminada_USB,"100")   
 			Aux_Conex_Celular = "False"
 			Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
 			Parametros = (Aux_Conex_Celular, "InternetChecker")
@@ -551,9 +552,12 @@ def ConexFibra():
 			print("Espera de 3 seg. para nuevo reintentoo")
 			time.sleep(3)
 			if activate_connection(TIPO_CONEXION_02):
-				Ruta_Predeterminada = get_default_route_ip(INTERFACE_02)
+				Ruta_Predeterminada_USB = get_default_route_ip(INTERFACE_02)
+				Ruta_Predeterminada = get_default_route_ip(INTERFACE_01)
 				del_route(INTERFACE_01) #Borra la ruta por defecto de la wifi
-				add_route(INTERFACE_02,Ruta_Predeterminada) #Se agrega ruta celular por defecto        
+				del_route(INTERFACE_02)
+				add_route(INTERFACE_02,Ruta_Predeterminada,"10") #Se agrega ruta celular por defecto        
+				add_route(INTERFACE_01,Ruta_Predeterminada,"100")
 				#enviarMensaje_a_mi("Luego del reintento en la conmutación de la conexión a internet a través de Celular_Bluetooh, se ha conectado exitosamente.")
 				enviarMensaje_a_mi("Conexión a internet conmutada a Celular y CONECTADA")
 				#Envio TRUE a la variable Aux_Conex_Celular a la base de datos
@@ -578,7 +582,7 @@ if __name__ == "__main__":
 	PID_Proceso()
 	#Envio de estado de Watchdog a la DB
 	schedule.every(5).seconds.do(partial(watchDog))
-	schedule.every(4).seconds.do(partial(cambio_internet))
+	schedule.every(3).seconds.do(partial(cambio_internet))
 	#Se establece la prioridad de conexion de cada interface de red
 	set_connection_priority(TIPO_CONEXION_01,200) #Conexion de fibra
 	set_connection_priority(TIPO_CONEXION_02,100) #Conexion celular
