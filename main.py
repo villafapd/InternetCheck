@@ -179,8 +179,8 @@ def cambio_internet():
 			if activate_connection(TIPO_CONEXION_02)== True:
 				Ruta_Predeterminada = get_default_route_ip(INTERFACE_01)
 				Ruta_Predeterminada_USB = get_default_route_ip(INTERFACE_02)
-				add_route(INTERFACE_01,Ruta_Predeterminada,"100") #Se agrega ruta por defecto a la fibra
-				add_route(INTERFACE_02,Ruta_Predeterminada_USB,"10")  
+				add_route(TIPO_CONEXION_01,Ruta_Predeterminada,"100") #Se agrega ruta por defecto a la fibra
+				add_route(TIPO_CONEXION_02,Ruta_Predeterminada_USB,"10")  
 				deactivate_connection(TIPO_CONEXION_02) #Desactiva la conexion a internet por celular 
 				activate_connection(TIPO_CONEXION_02) #activa la conexion a internet por celular 
 				deactivate_connection(TIPO_CONEXION_01) #Desactiva la conexion a internet por fibra 
@@ -548,8 +548,8 @@ def ConexFibra():
 			if Aux_Conex_Celular == "True":
 				Ruta_Predeterminada = get_default_route_ip(INTERFACE_01)
 				Ruta_Predeterminada_USB = get_default_route_ip(INTERFACE_02)
-				add_route(INTERFACE_01,Ruta_Predeterminada,"10") #Se agrega ruta por defecto a la fibra
-				add_route(INTERFACE_02,Ruta_Predeterminada_USB,"100")   
+				add_route(TIPO_CONEXION_01,Ruta_Predeterminada,"10") #Se agrega ruta por defecto a la fibra
+				add_route(TIPO_CONEXION_02,Ruta_Predeterminada_USB,"100")   
 				deactivate_connection(TIPO_CONEXION_01) #Desactiva la conexion a internet por fibra 
 				activate_connection(TIPO_CONEXION_01) #activa la conexion a internet por fibra 
 				deactivate_connection(TIPO_CONEXION_02) #Desactiva la conexion a internet por celular 
@@ -583,8 +583,8 @@ def ConexFibra():
 			if Aux_Conex_Celular == "False" and activate_connection(TIPO_CONEXION_02)== True:
 				Ruta_Predeterminada = get_default_route_ip(INTERFACE_01)
 				Ruta_Predeterminada_USB = get_default_route_ip(INTERFACE_02)
-				add_route(INTERFACE_01,Ruta_Predeterminada,"100") #Se agrega ruta por defecto a la fibra
-				add_route(INTERFACE_02,Ruta_Predeterminada_USB,"10")   
+				add_route(TIPO_CONEXION_01,Ruta_Predeterminada,"100") #Se agrega ruta por defecto a la fibra
+				add_route(TIPO_CONEXION_02,Ruta_Predeterminada_USB,"10")   
 				deactivate_connection(TIPO_CONEXION_02) #Desactiva la conexion a internet por celular 
 				activate_connection(TIPO_CONEXION_02) #activa la conexion a internet por celular 
 				deactivate_connection(TIPO_CONEXION_01) #Desactiva la conexion a internet por fibra 
@@ -606,8 +606,8 @@ def ConexFibra():
 				if activate_connection(TIPO_CONEXION_02):
 					Ruta_Predeterminada_USB = get_default_route_ip(INTERFACE_02)
 					Ruta_Predeterminada = get_default_route_ip(INTERFACE_01)
-					add_route(INTERFACE_01,Ruta_Predeterminada,"10") #Se agrega ruta por defecto a la fibra
-					add_route(INTERFACE_02,Ruta_Predeterminada_USB,"100")   
+					add_route(TIPO_CONEXION_01,Ruta_Predeterminada,"10") #Se agrega ruta por defecto a la fibra
+					add_route(TIPO_CONEXION_02,Ruta_Predeterminada_USB,"100")   
 					deactivate_connection(TIPO_CONEXION_01) #Desactiva la conexion a internet por fibra 
 					activate_connection(TIPO_CONEXION_01) #activa la conexion a internet por fibra 
 					deactivate_connection(TIPO_CONEXION_02) #Desactiva la conexion a internet por celular 
