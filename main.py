@@ -456,7 +456,7 @@ def check_estado_conex_internet():
 	try:
 		if check_interface_status(INTERFACE_02) and check_connectivity(INTERFACE_02) == "Conectado" and ip_interface(INTERFACE_02) != "0.0.0.0":
 			hora, minutos, segundos, dia, mes, ano = HoraFecha()
-			print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {INTERFACE_02} con mombre {nombre_conexion(INTERFACE_02)} está habilitada y está {check_connectivity(INTERFACE_02)} a internet y con dirección ip: {ip_interface(INTERFACE_02)}")	
+			print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} -> La interface de red {INTERFACE_02} con mombre {nombre_conexion(INTERFACE_02)} está habilitada y está {check_connectivity(INTERFACE_02)} a internet y con dirección ip: {ip_interface(INTERFACE_02)}")	
 			#Actualizo la DB con el estado de conexion a internet desde celular
 			Aux_Conex_Celular = "True"
 			Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
@@ -464,11 +464,11 @@ def check_estado_conex_internet():
 			SQLCMD_To_MariaDB(Consulta, Parametros)	
 			#Envio de mensaje de aviso del estado de conexion a internet desde celular
 			if check_connectivity(INTERFACE_01) == "Conectado":   
-				enviarMensaje_a_mi(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> Conexión desde Fibra óptica en estado normal y conectado a internet")
+				enviarMensaje_a_mi(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} -> Conexión desde Fibra óptica en estado normal y conectado a internet")
 			#Envio de mensaje de aviso del estado de conexion a internet desde fibra óptica
 			#Es solo notificación
 			if check_connectivity(INTERFACE_02) == "Conectado":
-				enviarMensaje_a_mi(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> Conexión desde desde celular en estado normal y conectado a internet")
+				enviarMensaje_a_mi(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} -> Conexión desde desde celular en estado normal y conectado a internet")
 			return True
 		else:
 			#Actualizo la DB con el estado de conexion a internet desde celular 
@@ -478,26 +478,27 @@ def check_estado_conex_internet():
 			SQLCMD_To_MariaDB(Consulta, Parametros)	   
 			#Envio de mensaje de aviso del estado de conexion a internet desde fibra óptica
 			hora, minutos, segundos, dia, mes, ano = HoraFecha()
-       
+	   
 			if check_connectivity(INTERFACE_01) == "Conectado":
-				enviarMensaje_a_mi(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> Conexión desde Fibra óptica en estado normal y CONECTADO a internet y conexion a internet desde celular DESCONECTADO")  
+				enviarMensaje_a_mi(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} -> Conexión desde Fibra óptica en estado normal y CONECTADO a internet y conexion a internet desde celular DESCONECTADO")  
 			return False
 	except Exception as e:
-		print (f" {str(e)}, Función Chequeo de estado conexion a internet")
+		hora, minutos, segundos, dia, mes, ano = HoraFecha()
+		print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} -> {str(e)}, error en Función Chequeo de estado conexion a internet")
 		return False
 	  
 def ConexCelular():
-    #Solo se usa para cehqueo de estado
+	#Solo se usa para cehqueo de estado
 	if check_interface_status(INTERFACE_02) and check_connectivity(INTERFACE_02) == "Conectado" and ip_interface(INTERFACE_02) != "0.0.0.0":
 		hora, minutos, segundos, dia, mes, ano = HoraFecha()
-		print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {INTERFACE_02} con mombre {nombre_conexion_cel(INTERFACE_02)} está habilitada y está {check_connectivity(INTERFACE_02)} a internet y con dirección ip: {ip_interface(INTERFACE_02)}")  
+		print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} -> La interface de red {INTERFACE_02} con mombre {nombre_conexion_cel(INTERFACE_02)} está habilitada y está {check_connectivity(INTERFACE_02)} a internet y con dirección ip: {ip_interface(INTERFACE_02)}")  
 		#Envio Estado de conexion a la base de datos
 		Consulta ="UPDATE Configserver SET ST_Conex_Celular = %s WHERE NombreServer = %s" 
 		Parametros = ("Conectado", "InternetChecker")
 		SQLCMD_To_MariaDB(Consulta, Parametros)   
 	else:
 		hora, minutos, segundos, dia, mes, ano = HoraFecha()
-		print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {INTERFACE_02} con mombre {nombre_conexion_cel(INTERFACE_02)} no está habilitada")   
+		print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} -> La interface de red {INTERFACE_02} con mombre {nombre_conexion_cel(INTERFACE_02)} no está habilitada")   
 		#Envio Estado de conexion a la base de datos
 		Consulta ="UPDATE Configserver SET ST_Conex_Celular = %s WHERE NombreServer = %s" 
 		Parametros = ("Desconectado", "InternetChecker")
@@ -509,7 +510,7 @@ def ConexFibra():
 		if check_interface_status(INTERFACE_01) and ip_interface(INTERFACE_01) == "192.168.68.100" and check_connectivity(INTERFACE_01) == "Conectado" and ip_interface(INTERFACE_01) != "0.0.0.0":
 
 			hora, minutos, segundos, dia, mes, ano = HoraFecha()
-			print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {INTERFACE_01} con mombre {nombre_conexion(INTERFACE_01)} está habilitada y está {check_connectivity(INTERFACE_01)} a internet y con dirección ip: {ip_interface(INTERFACE_01)}")	
+			print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} -> La interface de red {INTERFACE_01} con mombre {nombre_conexion(INTERFACE_01)} está habilitada y está {check_connectivity(INTERFACE_01)} a internet con dirección ip: {ip_interface(INTERFACE_01)}")	
 			#Envio Estado de conexion a la base de datos
 			Consulta ="UPDATE Configserver SET ST_Conex_Fibra = %s WHERE NombreServer = %s" 
 			Parametros = ("Conectado", "InternetChecker")
@@ -541,7 +542,7 @@ def ConexFibra():
 				
 		else:
 			hora, minutos, segundos, dia, mes, ano = HoraFecha()
-			print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> La interface de red {INTERFACE_01} con mombre {nombre_conexion(INTERFACE_01)} no está habilitada") 
+			print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} -> La interface de red {INTERFACE_01} con mombre {nombre_conexion(INTERFACE_01)} no está habilitada") 
 			#Envio Estado de conexion a la base de datos
 			Consulta ="UPDATE Configserver SET ST_Conex_Fibra = %s WHERE NombreServer = %s" 
 			Parametros = ("Desconectado", "InternetChecker")
@@ -572,12 +573,14 @@ def ConexFibra():
 				Parametros = (Aux_Conex_Celular, "InternetChecker")
 				SQLCMD_To_MariaDB(Consulta, Parametros)		
 				hora, minutos, segundos, dia, mes, ano = HoraFecha() 
-				enviarMensaje_a_mi(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} ---> Conexión a internet conmutada a Celular por fallo en conexión de fibra óptica")
+				enviarMensaje_a_mi(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} -> Conexión a internet conmutada a Celular por fallo en conexión de fibra óptica")
+				print (f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} -> Conexión a internet conmutada a Celular por fallo en conexión de fibra óptica")
 				#Envio TRUE a la variable Aux_Conex_Celular a la base de datos		
 				
 			elif Aux_Conex_Celular == "False" and activate_connection(TIPO_CONEXION_02)== False:
 				#Si la conexion de celular y fibra estan mal, se espera 3 seg. y se vuelve a intentar la conexion a internet por celular, si esta bien se conmuta a internet por celular, sino se espera 30 seg. para reiniciar la secuencia de chequeo de conexion a internet a través de celular
-				print("Espera de 3 seg. para nuevo reintentoo")
+				hora, minutos, segundos, dia, mes, ano = HoraFecha()
+				print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} -> Espera de 3 seg. para nuevo reintentoo")
 				time.sleep(20)
 				if activate_connection(TIPO_CONEXION_02):
 					Ruta_Predeterminada_USB = get_default_route_ip(INTERFACE_02)
@@ -587,6 +590,7 @@ def ConexFibra():
 					add_route(INTERFACE_02,Ruta_Predeterminada,"10") #Se agrega ruta celular por defecto        
 					add_route(INTERFACE_01,Ruta_Predeterminada,"100")
 					enviarMensaje_a_mi("Conexión a internet conmutada a Celular y CONECTADA")
+					print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} -> Conexión a internet conmutada a Celular y CONECTADA")
 					#Envio TRUE a la variable Aux_Conex_Celular a la base de datos
 					Aux_Conex_Celular = "True"
 					Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
@@ -594,10 +598,12 @@ def ConexFibra():
 					SQLCMD_To_MariaDB(Consulta, Parametros)				
 		
 				else:
-					print("Fallo de reintento en la conmutación a la red celular. Espera de 20 seg. para reinicio de secuencia de conexión")		
+					hora, minutos, segundos, dia, mes, ano = HoraFecha()
+					print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} -> Fallo de reintento en la conmutación a la red celular. Espera de 20 seg. para reinicio de secuencia de conexión")		
 
 	except Exception as e:
-		print (f" {str(e)}, Función Chequeo de estado conexion a internet")
+		hora, minutos, segundos, dia, mes, ano = HoraFecha()
+		print (f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} -> {str(e)}, Función Chequeo de estado conexion a internet")
 		return False
 				
 def cerrar_programa(signal, frame):
