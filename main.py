@@ -17,6 +17,15 @@ from functools import partial
 from datetime import timedelta, datetime
 import setproctitle
 
+#Importante:
+#Realizar con Network Manager los siguientes comandos para mantener guardada y persistente la configuración
+#sudo nmcli connection modify "RedWifi6_Mesh" ipv4.route-metric 10
+#sudo nmcli connection modify "ModemUsb" ipv4.route-metric 100
+#nmcli connection down RedWifi6_Mesh
+#nmcli connection up RedWifi6_Mesh
+#nmcli connection down ModemUsb
+#nmcli connection up ModemUsb
+
 setproctitle.setproctitle("ServerDomo-InternetChecker")
 
 # Dirección a verificar (puede ser un servidor confiable como Google/Bing)
@@ -125,7 +134,7 @@ def ConexCelular():
 def cambio_internet():
 	global ResetComAux, ResetComAux_1,failover_desabilitado, conta_failover
 	#-----------------------------------------------------------------------
-	#Modo Failover
+	#Hab. y Desab. Modo Failover (amobos son pulos de 5 seg. de duración)
 	#----------------------------------------------------------------------- 
 	query = "SELECT Modo_Failover, Cambio_Internet FROM {} WHERE {} = {}".format('Configserver', 'ID_Servidor', "3")
 	with mariadb.connect(user=USER, password=PASSWORD, database="homeserver") as conn:
@@ -138,6 +147,7 @@ def cambio_internet():
 				ModoFailover = int(row[0])
 				CambioInternet = int(row[1])
 		conn.commit()
+  
 	#ModoFailover = 1 durante 5 segundos. Comando desde DomoSever
 	if ModoFailover == 1 and ResetComAux == False:
 		conta_failover += 1
@@ -169,12 +179,10 @@ def cambio_internet():
 			if activate_connection(TIPO_CONEXION_02)== True:
 				Ruta_Predeterminada = get_default_route_ip(INTERFACE_01)
 				Ruta_Predeterminada_USB = get_default_route_ip(INTERFACE_02)
-				del_route(INTERFACE_02) #Borra la ruta por defecto de la Bluetooh/USB
+				del_route(INTERFACE_02) 
 				del_route(INTERFACE_01)
-				add_route(INTERFACE_01,Ruta_Predeterminada,"100") #Se agrega ruta por defecto a la fibra
+				add_route(INTERFACE_01,Ruta_Predeterminada,"100") 
 				add_route(INTERFACE_02,Ruta_Predeterminada_USB,"10") 		  
-
-   
 		elif failover_desabilitado == False and check_connectivity(INTERFACE_01) == "Conectado" or check_connectivity(INTERFACE_02) == "Conectado":
 			enviarMensaje_a_mi("Para realizar el cambio de conexión a internet a celular primero se debe desabilitar el Modo Failover automáico desde la aplicación móvil.") 
 	  
@@ -605,19 +613,12 @@ if __name__ == "__main__":
 	PID_Proceso()
 	#Envio de estado de Watchdog a la DB
 	schedule.every(5).seconds.do(partial(watchDog))
+	#escaneo de base datos para obtener los comandos desde DomoServer
 	schedule.every(3).seconds.do(partial(cambio_internet))
 	#Se establece la prioridad de conexion de cada interface de red
 	set_connection_priority(TIPO_CONEXION_01,200) #Conexion de fibra
 	set_connection_priority(TIPO_CONEXION_02,100) #Conexion celular
 	set_connection_priority("ConexFibraMesh",50) #conexion de fibra a traves de cable red usando la red mesh
-	#chequeo del estado de conexion a internet desde celular 
-	#check_estado_conex_internet()			
-	# Se ejecuta la función una vez antes al inicio del programa antes del periodo de 10 seg. 
-	#ConexFibra()      
-	#ConexCelular() 	
-	# Se ejecutan cada 20 y 40 segundos
-	#job_conex_fibra = schedule.every(20).seconds.do(partial(ConexFibra))
-	#job_conex_celular = schedule.every(40).seconds.do(partial(ConexCelular))
  
 	gestor = GestorSchedule()
 	gestor.iniciar()
