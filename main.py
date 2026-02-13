@@ -179,10 +179,14 @@ def cambio_internet():
 			if activate_connection(TIPO_CONEXION_02)== True:
 				Ruta_Predeterminada = get_default_route_ip(INTERFACE_01)
 				Ruta_Predeterminada_USB = get_default_route_ip(INTERFACE_02)
-				del_route(INTERFACE_02) 
-				del_route(INTERFACE_01)
-				add_route(INTERFACE_01,Ruta_Predeterminada,"100") 
-				add_route(INTERFACE_02,Ruta_Predeterminada_USB,"10") 		  
+				add_route(INTERFACE_01,Ruta_Predeterminada,"100") #Se agrega ruta por defecto a la fibra
+				add_route(INTERFACE_02,Ruta_Predeterminada_USB,"10")  
+				deactivate_connection(TIPO_CONEXION_02) #Desactiva la conexion a internet por celular 
+				activate_connection(TIPO_CONEXION_02) #activa la conexion a internet por celular 
+				deactivate_connection(TIPO_CONEXION_01) #Desactiva la conexion a internet por fibra 
+				activate_connection(TIPO_CONEXION_01) #activa la conexion a internet por fibra 
+ 
+		  
 		elif failover_desabilitado == False and check_connectivity(INTERFACE_01) == "Conectado" or check_connectivity(INTERFACE_02) == "Conectado":
 			enviarMensaje_a_mi("Para realizar el cambio de conexión a internet a celular primero se debe desabilitar el Modo Failover automáico desde la aplicación móvil.") 
 	  
@@ -294,6 +298,18 @@ def activate_connection(connection_name):
 		return True
 	else:
 		print(f"Error al activar la conexión '{connection_name}':\n{result.stderr}")
+		return False
+
+#Desactivar conexion de red e internet
+def desactivate_connection(connection_name):
+	command = f"nmcli connection down {connection_name}"
+	result = subprocess.run(command, shell=True, capture_output=True, text=True)
+
+	if result.returncode == 0:
+		print(f"La conexión '{connection_name}' se desactivó correctamente.")
+		return True
+	else:
+		print(f"Error al desactivar la conexión '{connection_name}':\n{result.stderr}")
 		return False
 
 #desactivar conexion de red e internet
@@ -426,8 +442,9 @@ def add_route(interface, gateway, metrica):
 	try:
 		# Agrega la ruta predeterminada
 		#Ej:  sudo ip route add default via 192.168.42.129 dev eth1
+		#f"sudo ip route add default via {gateway} dev {interface} metric {metrica}"
 		subprocess.check_output(
-			f"sudo ip route add default via {gateway} dev {interface} metric {metrica}",
+			f"sudo nmcli connection modify {interface} ipv4.route-metric {metrica}",
 			shell=True,
 			stderr=subprocess.DEVNULL,
 		)
@@ -531,10 +548,12 @@ def ConexFibra():
 			if Aux_Conex_Celular == "True":
 				Ruta_Predeterminada = get_default_route_ip(INTERFACE_01)
 				Ruta_Predeterminada_USB = get_default_route_ip(INTERFACE_02)
-				del_route(INTERFACE_02) #Borra la ruta por defecto de la Bluetooh/USB
-				del_route(INTERFACE_01)
 				add_route(INTERFACE_01,Ruta_Predeterminada,"10") #Se agrega ruta por defecto a la fibra
 				add_route(INTERFACE_02,Ruta_Predeterminada_USB,"100")   
+				deactivate_connection(TIPO_CONEXION_01) #Desactiva la conexion a internet por fibra 
+				activate_connection(TIPO_CONEXION_01) #activa la conexion a internet por fibra 
+				deactivate_connection(TIPO_CONEXION_02) #Desactiva la conexion a internet por celular 
+				activate_connection(TIPO_CONEXION_02) #activa la conexion a internet por celular 
 				Aux_Conex_Celular = "False"
 				Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
 				Parametros = (Aux_Conex_Celular, "InternetChecker")
@@ -564,10 +583,12 @@ def ConexFibra():
 			if Aux_Conex_Celular == "False" and activate_connection(TIPO_CONEXION_02)== True:
 				Ruta_Predeterminada = get_default_route_ip(INTERFACE_01)
 				Ruta_Predeterminada_USB = get_default_route_ip(INTERFACE_02)
-				del_route(INTERFACE_01) #Borra la ruta por defecto de la wifi
-				del_route(INTERFACE_02) #Borra la ruta por defecto de la Bluetooh/USB
-				add_route(INTERFACE_02,Ruta_Predeterminada_USB,"10") 
-				add_route(INTERFACE_01,Ruta_Predeterminada,"100") #Se agrega ruta fibra por defecto en 100 para que tenga menor prioridad que la ruta del celular
+				add_route(INTERFACE_01,Ruta_Predeterminada,"100") #Se agrega ruta por defecto a la fibra
+				add_route(INTERFACE_02,Ruta_Predeterminada_USB,"10")   
+				deactivate_connection(TIPO_CONEXION_02) #Desactiva la conexion a internet por celular 
+				activate_connection(TIPO_CONEXION_02) #activa la conexion a internet por celular 
+				deactivate_connection(TIPO_CONEXION_01) #Desactiva la conexion a internet por fibra 
+				activate_connection(TIPO_CONEXION_01) #activa la conexion a internet por fibra 
 				Aux_Conex_Celular = "True" #Var Auxiliar para guardar en base datos
 				Consulta ="UPDATE Configserver SET Aux_Conex_Celular = %s WHERE NombreServer = %s" 
 				Parametros = (Aux_Conex_Celular, "InternetChecker")
@@ -585,10 +606,12 @@ def ConexFibra():
 				if activate_connection(TIPO_CONEXION_02):
 					Ruta_Predeterminada_USB = get_default_route_ip(INTERFACE_02)
 					Ruta_Predeterminada = get_default_route_ip(INTERFACE_01)
-					del_route(INTERFACE_01) #Borra la ruta por defecto de la wifi
-					del_route(INTERFACE_02)
-					add_route(INTERFACE_02,Ruta_Predeterminada,"10") #Se agrega ruta celular por defecto        
-					add_route(INTERFACE_01,Ruta_Predeterminada,"100")
+					add_route(INTERFACE_01,Ruta_Predeterminada,"10") #Se agrega ruta por defecto a la fibra
+					add_route(INTERFACE_02,Ruta_Predeterminada_USB,"100")   
+					deactivate_connection(TIPO_CONEXION_01) #Desactiva la conexion a internet por fibra 
+					activate_connection(TIPO_CONEXION_01) #activa la conexion a internet por fibra 
+					deactivate_connection(TIPO_CONEXION_02) #Desactiva la conexion a internet por celular 
+					activate_connection(TIPO_CONEXION_02) #activa la conexion a internet por celular 
 					enviarMensaje_a_mi("Conexión a internet conmutada a Celular y CONECTADA")
 					print(f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} -> Conexión a internet conmutada a Celular y CONECTADA")
 					#Envio TRUE a la variable Aux_Conex_Celular a la base de datos
