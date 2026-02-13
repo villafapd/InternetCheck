@@ -138,6 +138,7 @@ def cambio_internet():
 				ModoFailover = int(row[0])
 				CambioInternet = int(row[1])
 		conn.commit()
+	#ModoFailover = 1 durante 5 segundos. Comando desde DomoSever
 	if ModoFailover == 1 and ResetComAux == False:
 		conta_failover += 1
 		ResetComAux = True
@@ -171,7 +172,7 @@ def cambio_internet():
 				del_route(INTERFACE_02) #Borra la ruta por defecto de la Bluetooh/USB
 				del_route(INTERFACE_01)
 				add_route(INTERFACE_01,Ruta_Predeterminada,"100") #Se agrega ruta por defecto a la fibra
-				add_route(INTERFACE_02,Ruta_Predeterminada_USB,"10")   
+				add_route(INTERFACE_02,Ruta_Predeterminada_USB,"10") 		  
 
    
 		elif failover_desabilitado == False and check_connectivity(INTERFACE_01) == "Conectado" or check_connectivity(INTERFACE_02) == "Conectado":
