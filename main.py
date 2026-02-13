@@ -89,47 +89,6 @@ conta_failover = 0
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
 
-class GestorSchedule:
-	def __init__(self):
-		self.job_fibra = None
-		self.job_celular = None
-		self.detener = False
-
-	def iniciar(self):
-		check_estado_conex_internet()
-		ConexFibra()      
-		ConexCelular()
-		self.job_fibra = schedule.every(20).seconds.do(self.wrapper_fibra)
-		self.job_celular = schedule.every(40).seconds.do(self.wrapper_celular)
-
-	def wrapper_fibra(self):
-		if not self.detener:
-			ConexFibra()
-
-	def wrapper_celular(self):
-		if not self.detener:
-			ConexCelular()
-
-	def detener_schedule(self):
-		print("Deteniendo tareas Automatizadas...")
-
-		if self.job_fibra:
-			schedule.cancel_job(self.job_fibra)
-			self.job_fibra = None
-
-		if self.job_celular:
-			schedule.cancel_job(self.job_celular)
-			self.job_celular = None
-
-		print("Confirmación de tareas detenidas.")
-
-def ConexFibra():
-	print("Monitoreo conexión de Fibra iniciado")
-
-def ConexCelular():
-	print("Monitoreo conexión de Celular iniciado")
-
-
 
 def cambio_internet():
 	global ResetComAux, ResetComAux_1,failover_desabilitado, conta_failover
@@ -628,6 +587,49 @@ def ConexFibra():
 		hora, minutos, segundos, dia, mes, ano = HoraFecha()
 		print (f"Hora: {hora}:{minutos}:{segundos} | Fecha: {dia}-{mes}-{ano} -> {str(e)}, Función Chequeo de estado conexion a internet")
 		return False
+
+
+class GestorSchedule:
+	def __init__(self):
+		self.job_fibra = None
+		self.job_celular = None
+		self.detener = False
+
+	def iniciar(self):
+		check_estado_conex_internet()
+		ConexFibra()      
+		ConexCelular()
+		self.job_fibra = schedule.every(20).seconds.do(self.wrapper_fibra)
+		self.job_celular = schedule.every(40).seconds.do(self.wrapper_celular)
+
+	def wrapper_fibra(self):
+		if not self.detener:
+			ConexFibra()
+
+	def wrapper_celular(self):
+		if not self.detener:
+			ConexCelular()
+
+	def detener_schedule(self):
+		print("Deteniendo tareas Automatizadas...")
+
+		if self.job_fibra:
+			schedule.cancel_job(self.job_fibra)
+			self.job_fibra = None
+
+		if self.job_celular:
+			schedule.cancel_job(self.job_celular)
+			self.job_celular = None
+
+		print("Confirmación de tareas detenidas.")
+
+def ConexFibra():
+	print("Monitoreo conexión de Fibra iniciado")
+
+def ConexCelular():
+	print("Monitoreo conexión de Celular iniciado")
+
+
 				
 def cerrar_programa(signal, frame):
 	print("\nPrograma interrumpido por el usuario. Cerrando...")
