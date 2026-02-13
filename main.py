@@ -166,9 +166,13 @@ def cambio_internet():
 			failover_desabilitado = False
 
 			if activate_connection(TIPO_CONEXION_02)== True:
-				Ruta_Predeterminada = get_default_route_ip(INTERFACE_02)
-				del_route(INTERFACE_01) #Borra la ruta por defecto de la wifi
-				add_route(INTERFACE_02,Ruta_Predeterminada) #Se agrega ruta celular por defecto 
+				Ruta_Predeterminada = get_default_route_ip(INTERFACE_01)
+				Ruta_Predeterminada_USB = get_default_route_ip(INTERFACE_02)
+				del_route(INTERFACE_02) #Borra la ruta por defecto de la Bluetooh/USB
+				del_route(INTERFACE_01)
+				add_route(INTERFACE_01,Ruta_Predeterminada,"100") #Se agrega ruta por defecto a la fibra
+				add_route(INTERFACE_02,Ruta_Predeterminada_USB,"10")   
+
    
 		elif failover_desabilitado == False and check_connectivity(INTERFACE_01) == "Conectado" or check_connectivity(INTERFACE_02) == "Conectado":
 			enviarMensaje_a_mi("Para realizar el cambio de conexión a internet a celular primero se debe desabilitar el Modo Failover automáico desde la aplicación móvil.") 
