@@ -650,7 +650,8 @@ if __name__ == "__main__":
 	set_connection_priority(TIPO_CONEXION_01,200) #Conexion de fibra
 	set_connection_priority(TIPO_CONEXION_02,100) #Conexion celular
 	set_connection_priority("ConexFibraMesh",50) #conexion de fibra a traves de cable red usando la red mesh
- 
+
+	#ConexCelular() 
 	gestor = GestorSchedule()
 	gestor.iniciar()
 
